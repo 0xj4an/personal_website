@@ -74,25 +74,11 @@ const experiences = [
     link: 'https://youtu.be/FWcAjKGW8gU'
   },
   {
-    title: 'Participation in a DeFi summit',
-    company: 'Próspera DeFi Summit',
-    period: 'December 2022',
-    description: 'Participation in a DeFi summit in Próspera Especial Economic Development Zone – ZEDE, in Roatán, Bay Islands, Honduras.',
-    link: undefined
-  },
-  {
     title: 'Volunteer for ETHGlobal SanFrancisco',
     company: 'ETHGlobal',
     period: 'November 2022',
     description: 'Supporting ETHGlobal as Volunteer helping with the logistics of the ETHGlobal SanFrancisco Hackathon.',
     link: 'https://youtu.be/fHiIMvGLBZc'
-  },
-  {
-    title: 'Participation as Speaker',
-    company: 'Sustainable Blockchain Summit LATAM',
-    period: 'October 2022',
-    description: 'Participation as Speaker with the talk «How NFT Technology Can Help Monitor & Commit to a True Protection of The Green Arks of the Planet« In this talk there will be a brief description of the ineffectiveness of the state in the protection of nature reserves, forests, water sources, etc. and the lack of commitment or logistics of immediate reaction to prevent and protect environmental damage.',
-    link: undefined
   },
   {
     title: 'Volunteer for DevCon VI',
@@ -101,13 +87,6 @@ const experiences = [
     description: 'Supporting Ethereum Foundation as Volunteer helping with the logistics of DevCon VI.',
     link: 'https://youtu.be/lgTMm7J0t7c'
   },
-  {
-    title: 'Participation in panel «DAOs in Latam, ¿The next big revolution in the crypto ecosystem?»',
-    company: 'Blockchain Summit Latam',
-    period: 'Jul 2022',
-    description: undefined,
-    link: 'https://youtu.be/1VX9JSf6U9s?t=8258'
-  }
 ]
 
 export default function Experience() {
@@ -120,7 +99,7 @@ export default function Experience() {
           viewport={{ once: true }}
           className="text-3xl font-bold text-white sm:text-4xl"
         >
-          Experience
+          Events
         </motion.h2>
 
         <div className="mt-12 space-y-8">
