@@ -57,7 +57,7 @@ export default function Projects() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="border-b border-gray-700 pb-6 last:border-b-0"
+              className="border-b border-white/10 pb-6 last:border-b-0"
             >
               <div className="p-0">
                 <h3 className="text-xl font-semibold text-white">{project.title}</h3>
@@ -66,7 +66,7 @@ export default function Projects() {
                   {project.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-white/10 px-3 py-1 text-xs text-white"
+                      className="rounded-full bg-white/[0.07] border border-white/10 px-3 py-1 text-xs text-white"
                     >
                       {tag}
                     </span>

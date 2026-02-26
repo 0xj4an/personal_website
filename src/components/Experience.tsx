@@ -131,10 +131,10 @@ export default function Experience() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="relative pl-8 border-l-2 border-gray-700"
+              className="relative pl-8 border-l-2 border-white/10 hover:bg-white/5 rounded-r-lg transition-colors py-4"
             >
               <div className="absolute left-0 top-0 -translate-x-2 -translate-y-1">
-                <div className="h-4 w-4 rounded-full bg-white"></div>
+                <div className="h-4 w-4 rounded-full bg-green-400"></div>
               </div>
               <div className="mb-4">
                 <h3 className="text-xl font-semibold text-white">{exp.title}</h3>

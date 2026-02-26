@@ -13,15 +13,16 @@ export default function About() {
       >
         Who is 0xj4an?
       </motion.h2>
-      
+      <p className="text-sm text-white/40 mb-6 -mt-6">Blockchain enthusiast · Community builder · Lifelong learner</p>
+
       <div className="flex flex-col lg:flex-row items-start">
         <div className="flex-shrink-0 mb-8 lg:mb-0 lg:mr-8">
-          <div className="overflow-hidden rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg w-40 h-40 flex items-center justify-center relative">
+          <div className="overflow-hidden rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg w-40 h-40 flex items-center justify-center relative" style={{ boxShadow: '0 0 20px rgba(123, 63, 242, 0.2)' }}>
             <Image
               src="/Assets/Social Media Kit PFP.jpeg"
               alt="Cartoon skull with hat and glasses"
               fill
-              className="object-cover rounded-xl border-4 border-gray-700 shadow-xl"
+              className="object-cover rounded-xl border-2 border-purple-500/30 shadow-xl"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -8,37 +8,51 @@ interface FloatingElementProps {
   position: [number, number, number];
   rotation: [number, number, number];
   scale: number;
+  color?: string;
 }
 
-export default function FloatingElement({ position, rotation, scale }: FloatingElementProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [randomRotation] = useState(() => Math.random() * Math.PI * 2);
-  const [geometry] = useState(() => {
-    const random = Math.random();
-    if (random < 0.33) return new THREE.TetrahedronGeometry(1, 0);
-    if (random < 0.66) return new THREE.OctahedronGeometry(1, 0);
-    return new THREE.IcosahedronGeometry(1, 0);
-  });
+// Nebula cloud - a cluster of transparent overlapping spheres with additive blending
+export default function FloatingElement({ position, rotation, scale, color = '#7B3FF2' }: FloatingElementProps) {
+  const groupRef = useRef<THREE.Group>(null);
 
-  useFrame((state: { clock: { elapsedTime: number } }) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = randomRotation + state.clock.elapsedTime * 0.2;
-      meshRef.current.rotation.y = randomRotation + state.clock.elapsedTime * 0.3;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + randomRotation) * 0.2;
+  const cloudParts = useMemo(() => {
+    const parts: { pos: [number, number, number]; size: number; opacity: number }[] = [];
+    const count = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < count; i++) {
+      parts.push({
+        pos: [
+          (Math.random() - 0.5) * 2,
+          (Math.random() - 0.5) * 1.5,
+          (Math.random() - 0.5) * 1.5,
+        ] as [number, number, number],
+        size: 0.4 + Math.random() * 0.8,
+        opacity: 0.02 + Math.random() * 0.04,
+      });
+    }
+    return parts;
+  }, []);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.02 + rotation[1];
+      groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.3 + position[0]) * 0.5;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation} scale={scale}>
-      <primitive object={geometry} />
-      <meshStandardMaterial
-        color="#ffffff"
-        wireframe
-        transparent
-        opacity={0.08}
-        emissive="#ffffff"
-        emissiveIntensity={0.05}
-      />
-    </mesh>
+    <group ref={groupRef} position={position} rotation={rotation} scale={scale}>
+      {cloudParts.map((part, i) => (
+        <mesh key={i} position={part.pos}>
+          <sphereGeometry args={[part.size, 16, 16]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={part.opacity}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      ))}
+    </group>
   );
-} 
+}
