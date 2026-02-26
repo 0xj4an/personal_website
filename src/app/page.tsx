@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import About from '@/components/About'
 import Experience from '@/components/Experience'
@@ -10,6 +10,7 @@ import Projects from '@/components/Projects'
 import Studies from '@/components/Studies'
 import Biography from '@/components/Biography'
 import Modal from '@/components/Modal'
+import LoadingScreen from '@/components/LoadingScreen'
 import Section from '../components/Section'
 import FloatingElement from '../components/FloatingElement'
 import Comet from '../components/Comet'
@@ -164,6 +165,12 @@ function Scene({ onSectionClick, isModalOpen }: { onSectionClick: (section: Sect
 }
 
 export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoaded(true), 2500)
+    return () => clearTimeout(timer)
+  }, [])
+
   const [activeSection, setActiveSection] = useState<{ isOpen: boolean; section: Section | null }>({
     isOpen: false,
     section: null,
@@ -176,6 +183,7 @@ export default function Home() {
 
   return (
     <>
+      <LoadingScreen isLoaded={isLoaded} />
       <div className="relative h-screen w-full bg-black">
         <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center z-10">
           <h1 className={`text-4xl font-bold text-white tracking-wider ${activeSection.isOpen ? 'opacity-50' : ''}`}>
