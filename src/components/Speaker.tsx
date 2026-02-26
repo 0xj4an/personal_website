@@ -7,7 +7,7 @@ const speakingEngagements = [
     title: 'Participation as Speaker',
     event: 'Sustainable Blockchain Summit LATAM',
     period: 'October 2022',
-    description: 'Talk: «How NFT Technology Can Help Monitor & Commit to a True Protection of The Green Arks of the Planet»  - A brief description of the ineffectiveness of the state in the protection of nature reserves, forests, water sources, and the lack of commitment or logistics of immediate reaction to prevent and protect environmental damage.',
+    description: 'Talk: «How NFT Technology Can Help Monitor & Commit to a True Protection of The Green Arks of the Planet». Explored the ineffectiveness of the state in protecting nature reserves, forests, and water sources, and the lack of immediate reaction to prevent environmental damage.',
   },
   {
     title: 'Panel: «DAOs in Latam, The next big revolution in the crypto ecosystem?»',
@@ -20,7 +20,7 @@ const speakingEngagements = [
     title: 'Participation in DeFi Summit',
     event: 'Próspera DeFi Summit',
     period: 'December 2022',
-    description: 'Participation in a DeFi summit in Próspera Special Economic Development Zone - ZEDE, in Roatán, Bay Islands, Honduras.',
+    description: 'Participation in a DeFi summit in Próspera Special Economic Development Zone (ZEDE), in Roatán, Bay Islands, Honduras.',
   },
 ]
 
@@ -48,7 +48,7 @@ export default function Speaker() {
               className="relative pl-8 border-l-2 border-white/10 hover:bg-white/5 rounded-r-lg transition-colors py-4"
             >
               <div className="absolute left-0 top-0 -translate-x-2 -translate-y-1">
-                <div className="h-4 w-4 rounded-full bg-yellow-400"></div>
+                <div className="h-4 w-4 rounded-full bg-green-400"></div>
               </div>
               <div className="mb-4">
                 <h3 className="text-xl font-semibold text-white">{talk.title}</h3>
