@@ -96,7 +96,7 @@ function RecTereza() {
 }
 
 // Spiral formula matching GalacticDust: r = 2.5 + t*7, theta = armOffset + t*1.3
-// Planets placed at spiral tips (t≈2.0, r≈16.5) or mid-arm (t≈1.5, r≈13)
+// 6 arms at 60° apart. All planets placed at spiral tips (t=2.0, r=16.5)
 const sections: Section[] = [
   {
     name: '0xj4an',
@@ -107,42 +107,43 @@ const sections: Section[] = [
     Component: About,
     gradient: 'from-purple-500 to-blue-500'
   },
-  // Arm 0 (teal) — offset 0
+  // Arm 0 (teal) — offset 0°
   {
     name: 'My Journey',
     id: 'about',
-    position: [-14.1, 8.5, 0.3], // tip t≈2.0
+    position: [-14.1, 8.5, 0.3],
     color: '#64ffda',
     scale: 2.4,
     Component: Biography,
     gradient: 'from-teal-500 to-emerald-500'
   },
+  // Arm 1 (cyan) — offset 60°
   {
     name: 'Contact',
     id: 'contact',
-    position: [-4.7, 12.1, -0.5], // mid t≈1.5
+    position: [-14.4, -8.0, -0.3],
     color: '#4dd0e1',
-    scale: 1.8,
+    scale: 2.0,
     Component: Contact,
     gradient: 'from-cyan-500 to-teal-500'
   },
-  // Arm 1 (gold) — offset π/2
+  // Arm 2 (gold) — offset 120°
   {
     name: 'Studies',
     id: 'studies',
-    position: [-7.8, -14.5, -0.3], // tip t≈2.0
+    position: [-0.3, -16.5, 0.3],
     color: '#ffd700',
     scale: 2.2,
     Component: Studies,
     gradient: 'from-yellow-500 to-amber-500'
   },
-  // Arm 2 (green) — offset π
+  // Arm 3 (green) — offset 180°
   {
     name: 'Experience',
     id: 'experience',
-    position: [14.1, -8.5, 0.3], // tip t≈2.0
+    position: [14.1, -8.5, -0.3],
     color: '#4ade80',
-    scale: 2.2,
+    scale: 1.0,
     gradient: 'from-green-500 to-emerald-500',
     subSections: [
       { name: 'Events', color: '#4ade80', Component: Experience, gradient: 'from-green-500 to-emerald-500' },
@@ -150,12 +151,13 @@ const sections: Section[] = [
       { name: 'Governance', color: '#4ade80', Component: Governance, gradient: 'from-green-500 to-emerald-500' },
     ],
   },
+  // Arm 4 (lime) — offset 240°
   {
     name: 'Recommendations',
     id: 'recommendations',
-    position: [4.7, -12.1, -0.5], // mid t≈1.5
+    position: [14.4, 8.0, 0.3],
     color: '#a9e34b',
-    scale: 1.8,
+    scale: 0.8,
     gradient: 'from-lime-500 to-green-500',
     subSections: [
       { name: 'Anna', color: '#a9e34b', Component: RecAnna, gradient: 'from-lime-500 to-green-500' },
@@ -168,11 +170,11 @@ const sections: Section[] = [
       { name: 'Tereza', color: '#a9e34b', Component: RecTereza, gradient: 'from-lime-500 to-green-500' },
     ],
   },
-  // Arm 3 (pink) — offset 3π/2
+  // Arm 5 (pink) — offset 300°
   {
     name: 'Projects',
     id: 'projects',
-    position: [8.5, 14.2, -0.3], // tip t≈2.0
+    position: [0.3, 16.5, -0.3],
     color: '#ff79c6',
     scale: 2.0,
     Component: Projects,
@@ -244,8 +246,9 @@ function Scene({ onSectionClick, isModalOpen }: { onSectionClick: (section: Sect
       {/* Scene-level elements (must be outside rotating group) */}
       <ambientLight intensity={0.02} />
       <pointLight position={[0, 0, 15]} intensity={0.15} color="#7B3FF2" distance={30} />
-      <pointLight position={[15, 12, 10]} intensity={0.08} color="#64ffda" />
-      <pointLight position={[-15, -10, 10]} intensity={0.08} color="#4ade80" />
+      <pointLight position={[15, 12, 10]} intensity={0.06} color="#64ffda" />
+      <pointLight position={[-15, -10, 10]} intensity={0.06} color="#4ade80" />
+      <pointLight position={[0, -15, 10]} intensity={0.06} color="#ffd700" />
       <fog attach="fog" args={['#020010', 50, 100]} />
 
       <RotatingGalaxy>

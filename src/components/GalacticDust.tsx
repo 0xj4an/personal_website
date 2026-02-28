@@ -9,27 +9,29 @@ export default function GalacticDust() {
   const coreRef = useRef<THREE.Points>(null);
 
   const armData = useMemo(() => {
-    const numArms = 4;
-    const particlesPerArm = 1000;
+    const numArms = 6;
+    const particlesPerArm = 700;
     const count = numArms * particlesPerArm;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
     // Each arm gets a color gradient
     const armColorPairs: [THREE.Color, THREE.Color][] = [
-      [new THREE.Color('#64ffda'), new THREE.Color('#4dd0e1')], // Arm 0: teal
-      [new THREE.Color('#ffd700'), new THREE.Color('#ff9500')], // Arm 1: gold
-      [new THREE.Color('#4ade80'), new THREE.Color('#a9e34b')], // Arm 2: green
-      [new THREE.Color('#ff79c6'), new THREE.Color('#ff6b6b')], // Arm 3: pink
+      [new THREE.Color('#64ffda'), new THREE.Color('#4dd0e1')], // Arm 0: teal (My Journey)
+      [new THREE.Color('#4dd0e1'), new THREE.Color('#38bdf8')], // Arm 1: cyan (Contact)
+      [new THREE.Color('#ffd700'), new THREE.Color('#ff9500')], // Arm 2: gold (Studies)
+      [new THREE.Color('#4ade80'), new THREE.Color('#a9e34b')], // Arm 3: green (Experience)
+      [new THREE.Color('#a9e34b'), new THREE.Color('#84cc16')], // Arm 4: lime (Recommendations)
+      [new THREE.Color('#ff79c6'), new THREE.Color('#ff6b6b')], // Arm 5: pink (Projects)
     ];
     const purple = new THREE.Color('#7B3FF2');
 
     let idx = 0;
 
     for (let arm = 0; arm < numArms; arm++) {
-      const armOffset = arm * (Math.PI / 2); // 4 arms, 90° apart
+      const armOffset = arm * (Math.PI / 3); // 6 arms, 60° apart
       for (let i = 0; i < particlesPerArm; i++) {
-        const t = (i / particlesPerArm) * 2.5;
+        const t = (i / particlesPerArm) * 2.0;
         const r = 2.5 + t * 7;
         const theta = armOffset + t * 1.3;
         const scatter = 1.0 + t * 0.5;
@@ -39,7 +41,7 @@ export default function GalacticDust() {
         // Z spread increases with distance - gives 3D depth
         positions[idx * 3 + 2] = (Math.random() - 0.5) * (0.5 + t * 1.5);
 
-        const colorT = t / 2.5;
+        const colorT = t / 2.0;
         const baseColor = armColorPairs[arm][0].clone().lerp(armColorPairs[arm][1], colorT);
         baseColor.lerp(purple, 0.15 + (1 - colorT) * 0.15);
 
@@ -79,9 +81,7 @@ export default function GalacticDust() {
   }, []);
 
   useFrame((state) => {
-    if (pointsRef.current) {
-      pointsRef.current.rotation.z = state.clock.elapsedTime * 0.003;
-    }
+    // Arms: no independent rotation — RotatingGalaxy keeps them aligned with planets
     if (coreRef.current) {
       coreRef.current.rotation.z = state.clock.elapsedTime * 0.006;
     }
@@ -89,7 +89,7 @@ export default function GalacticDust() {
 
   return (
     <>
-      {/* 4 spiral arm particles */}
+      {/* 6 spiral arm particles */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[armData.positions, 3]} />
