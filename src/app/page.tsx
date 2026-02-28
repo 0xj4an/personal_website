@@ -1,6 +1,6 @@
 'use client'
 
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { EffectComposer, Vignette } from '@react-three/postprocessing'
 import { useState, useRef, useEffect } from 'react'
@@ -191,6 +191,24 @@ function RotatingGalaxy({ children }: { children: React.ReactNode }) {
     }
   });
   return <group ref={groupRef}>{children}</group>;
+}
+
+// Adjusts camera distance based on viewport aspect ratio so the galaxy fits on mobile
+function ResponsiveCamera() {
+  const { camera, size } = useThree();
+  useEffect(() => {
+    const aspect = size.width / size.height;
+    // On narrow screens (portrait mobile), zoom out so planets at ±16.5 stay visible
+    if (aspect < 1) {
+      (camera as THREE.PerspectiveCamera).position.z = 60;
+    } else if (aspect < 1.2) {
+      (camera as THREE.PerspectiveCamera).position.z = 52;
+    } else {
+      (camera as THREE.PerspectiveCamera).position.z = 45;
+    }
+    camera.updateProjectionMatrix();
+  }, [camera, size]);
+  return null;
 }
 
 function Scene({ onSectionClick, isModalOpen }: { onSectionClick: (section: Section) => void, isModalOpen: boolean }) {
@@ -395,12 +413,13 @@ export default function Home() {
           className="absolute inset-0"
           gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
         >
+          <ResponsiveCamera />
           <OrbitControls
             enableZoom={true}
             enablePan={true}
             enableRotate={true}
             minDistance={12}
-            maxDistance={55}
+            maxDistance={65}
             enableDamping
             dampingFactor={0.05}
             target={[0, 0, 0]}
