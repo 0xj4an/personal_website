@@ -60,9 +60,40 @@ const RecAnna = createRecComponent('Anna');
 const RecZ0z = createRecComponent('z0z');
 const RecMarek = createRecComponent('Marek');
 const RecRene = createRecComponent('Rene');
-const Rec0xgoldo = createRecComponent('0xgoldo');
-const RecAnnaKaic = createRecComponent('Anna Kaic');
 const RecLuuk = createRecComponent('Luuk');
+
+function Rec0xgoldo() {
+  return (
+    <section className="min-h-screen bg-black py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-white sm:text-4xl">0xgoldo</h2>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked alongside Juan since 2022 as a fellow moderator and governance guardian, and he consistently stands out for his drive and reliability. Juan is highly hands on, efficient, and proactive in everything he takes on. He is the kind of person you can count on without hesitation, always available and ready to step in when needed. His strong sense of responsibility and commitment to the community make him a valuable presence in any team environment. Working with him has always meant working with someone who truly cares about getting things done properly and on time.&quot;</p>
+      </div>
+    </section>
+  );
+}
+
+function RecAnnaKaic() {
+  return (
+    <section className="min-h-screen bg-black py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-white sm:text-4xl">Anna Kaic</h2>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked with Juan in multiple occasions and he is one of the few professionals I would trust fully. His work ethics and people management skills are at a high level and his professionalism is unmatched. He delivers on his commitments every single time.&quot;</p>
+      </div>
+    </section>
+  );
+}
+
+function RecTereza() {
+  return (
+    <section className="min-h-screen bg-black py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-bold text-white sm:text-4xl">Tereza</h2>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;Juan is a community builder at heart and one of the best I have encountered in the web3 and public goods space. He brings genuine knowledge across the ecosystem, a generalist&apos;s range spanning fundraising, project coordination, and strategy, and a rare ability to connect people and move things forward. Thoughtful, dependable, and always invested in the work, he is the kind of person who makes every project stronger.&quot;</p>
+      </div>
+    </section>
+  );
+}
 
 // Spiral formula matching GalacticDust: r = 2.5 + t*7, theta = armOffset + t*1.3
 // Planets placed at spiral tips (t≈2.0, r≈16.5) or mid-arm (t≈1.5, r≈13)
@@ -134,6 +165,7 @@ const sections: Section[] = [
       { name: '0xgoldo', color: '#a9e34b', Component: Rec0xgoldo, gradient: 'from-lime-500 to-green-500' },
       { name: 'Anna Kaic', color: '#a9e34b', Component: RecAnnaKaic, gradient: 'from-lime-500 to-green-500' },
       { name: 'Luuk', color: '#a9e34b', Component: RecLuuk, gradient: 'from-lime-500 to-green-500' },
+      { name: 'Tereza', color: '#a9e34b', Component: RecTereza, gradient: 'from-lime-500 to-green-500' },
     ],
   },
   // Arm 3 (pink) — offset 3π/2
