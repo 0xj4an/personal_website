@@ -12,25 +12,25 @@ interface Project {
 const projects: Project[] = [
   {
     title: 'Celo Blockchain Moderator',
-    description: 'Contributing from the role of Moderator for the Celo Blockchain, always looking to help new users to get solves his doubts in the Discord Server, helping to educate people about the uses and benefits, create content in Spanish. Succesfully onboard the first community that need economic aid to participate in the ImpactMarket protocol and carry out pilot tests in Medellín, Colombia. Currently, a community of young athletes has already been established to help them improve their life opportunities.',
+    description: 'Moderator for the Celo Blockchain Discord server, helping new users, creating educational content in Spanish, and onboarding communities. Successfully brought the first community needing economic aid into the ImpactMarket protocol with pilot tests in Medellin, Colombia. Established a community of young athletes to help improve their life opportunities.',
     tags: ['Celo', 'Blockchain', 'Moderation', 'Community Building', 'ImpactMarket'],
     gradient: 'from-lime-500 to-green-500',
   },
   {
     title: 'Immortal DAO Moderator',
-    description: 'Contributing from the role of Moderator in the Immortal DAO project that runs on the Celo network, always looking to create content in Spanish and helping with the translation of all project documentation.',
+    description: 'Moderator for the Immortal DAO project on the Celo network. Created content in Spanish and helped translate all project documentation.',
     tags: ['Celo', 'DAO', 'Moderation', 'Translation'],
     gradient: 'from-blue-500 to-teal-500',
   },
   {
-    title: 'Celo Colombian Peso Stablecoin',
-    description: 'Looking forward for the creation of a new Stablecoin pegged to the Colombian Peso in the Celo network, seeking to improve the adoption of this Blockchain and contribute to growth. Already created the discussion post in the Celo Forum. Already submited a CGP Proposal to Celo Governance.',
+    title: 'Celo Colombian Peso Stablecoin ($cCOP)',
+    description: 'Proposed the creation of a stablecoin pegged to the Colombian Peso on Celo (CGP-0060). Created the forum discussion post and submitted the governance proposal to advance adoption in Colombia.',
     tags: ['Celo', 'Stablecoin', 'Governance', 'Proposal'],
     gradient: 'from-yellow-500 to-amber-500',
   },
   {
-    title: 'Future: Forestry NFT Project',
-    description: 'Actually in the conceptualization phase of a Forestry project based on NFT technology in Colombia.',
+    title: 'Forestry NFT Project',
+    description: 'Conceptualizing a forestry project based on NFT technology in Colombia, exploring how blockchain can support reforestation and sustainable land use.',
     tags: ['NFTs', 'Forestry', 'ReFi'],
     gradient: 'from-green-700 to-lime-700',
   },

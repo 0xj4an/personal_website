@@ -67,7 +67,7 @@ function Rec0xgoldo() {
     <section className="min-h-screen bg-black py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-white sm:text-4xl">0xgoldo</h2>
-        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked alongside Juan since 2022 as a fellow moderator and governance guardian, and he consistently stands out for his drive and reliability. Juan is highly hands on, efficient, and proactive in everything he takes on. He is the kind of person you can count on without hesitation, always available and ready to step in when needed. His strong sense of responsibility and commitment to the community make him a valuable presence in any team environment. Working with him has always meant working with someone who truly cares about getting things done properly and on time.&quot;</p>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked alongside 0xj4an since 2022 as a fellow moderator and governance guardian, and he consistently stands out for his drive and reliability. 0xj4an is highly hands on, efficient, and proactive in everything he takes on. He is the kind of person you can count on without hesitation, always available and ready to step in when needed. His strong sense of responsibility and commitment to the community make him a valuable presence in any team environment. Working with him has always meant working with someone who truly cares about getting things done properly and on time.&quot;</p>
       </div>
     </section>
   );
@@ -78,7 +78,7 @@ function RecAnnaKaic() {
     <section className="min-h-screen bg-black py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-white sm:text-4xl">Anna Kaic</h2>
-        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked with Juan in multiple occasions and he is one of the few professionals I would trust fully. His work ethics and people management skills are at a high level and his professionalism is unmatched. He delivers on his commitments every single time.&quot;</p>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;I have worked with 0xj4an in multiple occasions and he is one of the few professionals I would trust fully. His work ethics and people management skills are at a high level and his professionalism is unmatched. He delivers on his commitments every single time.&quot;</p>
       </div>
     </section>
   );
@@ -89,7 +89,7 @@ function RecTereza() {
     <section className="min-h-screen bg-black py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-white sm:text-4xl">Tereza</h2>
-        <p className="mt-6 text-gray-300 italic text-lg">&quot;Juan is a community builder at heart and one of the best I have encountered in the web3 and public goods space. He brings genuine knowledge across the ecosystem, a generalist&apos;s range spanning fundraising, project coordination, and strategy, and a rare ability to connect people and move things forward. Thoughtful, dependable, and always invested in the work, he is the kind of person who makes every project stronger.&quot;</p>
+        <p className="mt-6 text-gray-300 italic text-lg">&quot;0xj4an is a community builder at heart and one of the best I have encountered in the web3 and public goods space. He brings genuine knowledge across the ecosystem, a generalist&apos;s range spanning fundraising, project coordination, and strategy, and a rare ability to connect people and move things forward. Thoughtful, dependable, and always invested in the work, he is the kind of person who makes every project stronger.&quot;</p>
       </div>
     </section>
   );
@@ -99,21 +99,21 @@ function RecTereza() {
 // Planets placed at spiral tips (t≈2.0, r≈16.5) or mid-arm (t≈1.5, r≈13)
 const sections: Section[] = [
   {
-    name: 'Who I Am',
+    name: '0xj4an',
     id: 'home',
     position: [0, 0, 0], // Galactic core
     color: '#7B3FF2',
-    scale: 2.8,
+    scale: 3.5,
     Component: About,
     gradient: 'from-purple-500 to-blue-500'
   },
   // Arm 0 (teal) — offset 0
   {
-    name: 'About Me',
+    name: 'My Journey',
     id: 'about',
     position: [-14.1, 8.5, 0.3], // tip t≈2.0
     color: '#64ffda',
-    scale: 1.8,
+    scale: 2.4,
     Component: Biography,
     gradient: 'from-teal-500 to-emerald-500'
   },
@@ -122,7 +122,7 @@ const sections: Section[] = [
     id: 'contact',
     position: [-4.7, 12.1, -0.5], // mid t≈1.5
     color: '#4dd0e1',
-    scale: 1.2,
+    scale: 1.8,
     Component: Contact,
     gradient: 'from-cyan-500 to-teal-500'
   },
@@ -132,7 +132,7 @@ const sections: Section[] = [
     id: 'studies',
     position: [-7.8, -14.5, -0.3], // tip t≈2.0
     color: '#ffd700',
-    scale: 1.5,
+    scale: 2.2,
     Component: Studies,
     gradient: 'from-yellow-500 to-amber-500'
   },
@@ -142,7 +142,7 @@ const sections: Section[] = [
     id: 'experience',
     position: [14.1, -8.5, 0.3], // tip t≈2.0
     color: '#4ade80',
-    scale: 1.6,
+    scale: 2.2,
     gradient: 'from-green-500 to-emerald-500',
     subSections: [
       { name: 'Events', color: '#4ade80', Component: Experience, gradient: 'from-green-500 to-emerald-500' },
@@ -155,7 +155,7 @@ const sections: Section[] = [
     id: 'recommendations',
     position: [4.7, -12.1, -0.5], // mid t≈1.5
     color: '#a9e34b',
-    scale: 1.1,
+    scale: 1.8,
     gradient: 'from-lime-500 to-green-500',
     subSections: [
       { name: 'Anna', color: '#a9e34b', Component: RecAnna, gradient: 'from-lime-500 to-green-500' },
@@ -174,7 +174,7 @@ const sections: Section[] = [
     id: 'projects',
     position: [8.5, 14.2, -0.3], // tip t≈2.0
     color: '#ff79c6',
-    scale: 1.4,
+    scale: 2.0,
     Component: Projects,
     gradient: 'from-pink-500 to-purple-500'
   }

@@ -10,7 +10,7 @@ export default function Biography() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 text-3xl font-bold sm:text-4xl"
       >
-        Biography
+        My Journey
       </motion.h2>
 
       <motion.p
@@ -19,7 +19,7 @@ export default function Biography() {
         transition={{ delay: 0.2 }}
         className="text-lg text-gray-300"
       >
-        Hey there! 👋 I&apos;m driven by a buzzing curiosity 🤔 and often find myself looking at things from a fresh angle, not always sticking to the usual paths. It feels like I&apos;ve been on a lifelong adventure of learning, soaking up new stuff every day. There&apos;s this restless spirit ✨ in me, always chasing answers and trying to connect the dots between things that seem totally unrelated. To me, it&apos;s all part of building a unique personal picture!
+        I&apos;ve always been curious about how things work and drawn to looking at problems from unexpected angles. That curiosity has led me through a pretty diverse path, connecting dots between fields that don&apos;t usually overlap.
       </motion.p>
 
       <motion.div
@@ -28,13 +28,13 @@ export default function Biography() {
         transition={{ delay: 0.4 }}
         className="mt-4 text-lg text-gray-300"
       >
-        My studies have taken me through some cool areas:
-        <ul className="list-none mt-2 ml-4 space-y-2">
-          <li>💻 Technology in Systems</li>
-          <li>🚜🌾 Agricultural Engineering from the National University of Colombia</li>
-          <li>📈 Specialization in Preparation and Evaluation of Private Projects</li>
-          <li>📋 Master&apos;s degree in Project Management</li>
-          <li>⚖️ Specialist in State Contracting</li>
+        Academic background:
+        <ul className="list-disc mt-2 ml-6 space-y-1">
+          <li>Technology in Systems</li>
+          <li>Agricultural Engineering, National University of Colombia</li>
+          <li>Specialization in Preparation and Evaluation of Private Projects</li>
+          <li>Master&apos;s in Project Management</li>
+          <li>Specialist in State Contracting</li>
         </ul>
       </motion.div>
 
@@ -44,7 +44,7 @@ export default function Biography() {
         transition={{ delay: 0.6 }}
         className="mt-4 text-lg text-gray-300"
       >
-        As a kid, I dreamed of flying planes ✈️, and actually studying aviation felt like making that dream come true! At the same time, tech stuff has always grabbed my attention, pushing me to stay updated. Systems were more of a fun hobby back then. And guess what? Finance 💰 has been a huge passion since university. I dove into the complexities of the Colombian Stock Exchange and later explored broader investments with brokers. I was always grabbing virtual courses and teaching myself about macroeconomic theories 🌎📊, technical analysis 📈📉, indicators, and pretty much anything I could get my hands on! 📚
+        Growing up I wanted to fly planes, and studying aviation was my way of chasing that. Tech was always there too, first as a hobby, then as something more serious. Finance became a real interest during university. I spent a lot of time studying the Colombian Stock Exchange, macroeconomic theory, technical analysis, and eventually started trading with brokers.
       </motion.p>
 
       <motion.p
@@ -53,7 +53,7 @@ export default function Biography() {
         transition={{ delay: 0.8 }}
         className="mt-4 text-lg text-gray-300"
       >
-        Then came Blockchain technology and Crypto ecosystems ₿🔗, and WOW, did they shake things up! It felt like all my interests – tech, coding, finance, even how it could apply to agriculture – suddenly clicked together. And NFTs 🖼️💡? They totally opened up a new world of possibilities on the blockchain, blending things like art and technology that used to seem miles apart.
+        When I found blockchain and crypto, everything clicked. Tech, finance, governance, even agriculture. It was the intersection of all the things I cared about. That led me into the Celo ecosystem, where I&apos;ve been working on governance, community building, and coordination across Latin America and Europe ever since.
       </motion.p>
     </div>
   )

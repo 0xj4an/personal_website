@@ -258,7 +258,7 @@ const SectionComponent = forwardRef<THREE.Mesh, SectionProps>(
     const isCenter = id === 'home';
     const hasRing = id === 'studies';
     const hasSubMoons = subSections && subSections.length > 0;
-    const fontSize = isCenter ? 'text-xl' : 'text-md';
+    const fontSize = isCenter ? 'text-2xl' : 'text-lg';
 
     const threeColor = useMemo(() => new THREE.Color(color), [color]);
 
@@ -344,9 +344,8 @@ const SectionComponent = forwardRef<THREE.Mesh, SectionProps>(
         {/* Clickable sub-section moons */}
         {hasSubMoons && !isModalOpen && subSections.map((sub, i) => {
           const moonCount = subSections.length;
-          const baseDistance = moonCount > 4 ? 1.4 : 1.6;
-          const spacing = moonCount > 4 ? 0.4 : 0.6;
-          const moonSize = moonCount > 4 ? 0.3 : 0.4;
+          const orbitRadius = moonCount > 6 ? 1.6 : moonCount > 4 ? 1.5 : 1.6;
+          const moonSize = moonCount > 6 ? 0.25 : moonCount > 4 ? 0.3 : 0.4;
           return (
           <ClickableMoon
             key={sub.name}
@@ -354,7 +353,7 @@ const SectionComponent = forwardRef<THREE.Mesh, SectionProps>(
             color={sub.color}
             parentScale={scale}
             speed={0.04}
-            distance={baseDistance + i * spacing}
+            distance={orbitRadius}
             size={moonSize}
             offset={i * ((Math.PI * 2) / moonCount)}
             onClick={() => onSectionClick({
@@ -371,7 +370,7 @@ const SectionComponent = forwardRef<THREE.Mesh, SectionProps>(
         })}
 
         {!isModalOpen && (
-          <Html center distanceFactor={15}>
+          <Html center distanceFactor={12}>
             <div
               className={`cursor-pointer font-bold ${fontSize} text-center select-none whitespace-nowrap`}
               style={{
