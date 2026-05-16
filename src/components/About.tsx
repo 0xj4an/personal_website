@@ -3,6 +3,33 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
+const roles = [
+  {
+    title: 'Celo',
+    description: 'Governance and Communities Lead. Colombia Ambassador.',
+  },
+  {
+    title: 'ReFi Colombia · ReFi Medellin',
+    description: 'Co-Founder. Regenerative finance for Latin America.',
+  },
+  {
+    title: 'EVVM',
+    description: 'Ambassador.',
+  },
+  {
+    title: 'ETHGlobal · Devcon · Devconnect',
+    description: 'Volunteer Lead, Registration.',
+  },
+  {
+    title: 'ETH Colombia · ETH Medellin · Medellin Blockchain Community',
+    description: 'Core Team at ETH Colombia and ETH Medellin. Founder of Medellin Blockchain Community.',
+  },
+  {
+    title: 'Builder',
+    description: 'zkVVM (ZK shielded pool on EVVM). VigilBot.eth (ETHPrague Swarm winner). Blizkperse (ZK private payments). Also at ETHDenver and ETHGlobal NY.',
+  },
+]
+
 export default function About() {
   return (
     <div className="text-white">
@@ -13,7 +40,7 @@ export default function About() {
       >
         0xj4an
       </motion.h2>
-      <p className="text-sm text-white/40 mb-6 -mt-6">Blockchain governance · Community building · Web3 coordination</p>
+      <p className="text-sm text-green-400/80 mb-6 -mt-6 font-semibold">Celo · ReFi · EVVM · Builder</p>
 
       <div className="flex flex-col lg:flex-row items-start">
         <div className="flex-shrink-0 mb-8 lg:mb-0 lg:mr-8">
@@ -50,15 +77,21 @@ export default function About() {
           </div>
         </div>
         <div className="flex-1 flex flex-col justify-center">
-          <motion.p
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-gray-300"
-          >
-            Governance guardian, community builder, and coordinator in the Celo ecosystem. Involved in 23+ governance proposals, volunteered at 12+ ETHGlobal and Ethereum events, and active across multiple DAOs and regional communities in Latin America and Europe.
-          </motion.p>
-          <div className="flex flex-wrap gap-4 mt-6">
+          <div className="space-y-5">
+            {roles.map((role, index) => (
+              <motion.div
+                key={role.title}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 + index * 0.05 }}
+                className="border-l-2 border-green-400/60 pl-4"
+              >
+                <h3 className="text-base font-bold text-green-400">{role.title}</h3>
+                <p className="mt-1 text-gray-300">{role.description}</p>
+              </motion.div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-4 mt-8">
             <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-center">
               <p className="text-2xl font-bold text-purple-400">23+</p>
               <p className="text-xs text-gray-400">CGP Proposals</p>
@@ -76,4 +109,4 @@ export default function About() {
       </div>
     </div>
   )
-} 
+}

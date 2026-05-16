@@ -4,6 +4,33 @@ import { motion } from 'framer-motion'
 
 const speakingEngagements = [
   {
+    title: 'Keynote: «Stablecoins for the People: On-Chain Subsidies and Frictionless Web3 Onboarding in Colombia»',
+    event: 'ETHCluj 2026 · Day 2 Business Stage (Usability & Adoption track)',
+    period: 'May 2026',
+    description: 'Keynote at ETHCluj 2026 (May 14) covering how ReFi Colombia built a stablecoin-powered subsidy platform on Celo that delivers real value to communities while onboarding people into Web3 without friction. The talk covers how it was built, the impact so far, and why this model is replicable anywhere.',
+    link: 'https://www.youtube.com/live/_RVMChZQ_EQ?t=21210',
+  },
+  {
+    title: 'Keynote: «Virtual State Blockchains on Ethereum»',
+    event: 'ETHCluj 2026 · Day 1 Business Stage',
+    period: 'May 2026',
+    description: 'Advanced-level keynote at ETHCluj 2026 (May 13, Cluj-Napoca, Romania). Ethereum has scaled horizontally through rollups, but many applications still need more flexible execution patterns. This talk introduced virtual state blockchains: chain-like environments deployed in Solidity, with isolated state, async nonces, executors, zkVaults, FHE confidentiality, and abstracted UX. The result is a practical way to experiment with new execution models without new infrastructure.',
+    link: 'https://www.youtube.com/live/khou85jtmQE?t=18804',
+  },
+  {
+    title: 'Talk: «Virtual State Blockchains on Ethereum»',
+    event: 'ETHPrague 2026',
+    period: 'May 2026',
+    description: 'Co-presented with German Abal at ETHPrague 2026 (May 8-10, Prague). Introduced virtual state blockchains (EVVM): chain-like environments deployed in Solidity with isolated state, async nonces, executors, zkVaults, FHE confidentiality, and abstracted UX. A practical way to experiment with new execution models on Ethereum without new infrastructure.',
+    link: 'https://www.youtube.com/watch?v=Ckziq-5I3pQ',
+  },
+  {
+    title: 'Participation in DeFi Summit',
+    event: 'Próspera DeFi Summit',
+    period: 'December 2022',
+    description: 'Participation in a DeFi summit in Próspera Special Economic Development Zone (ZEDE), in Roatán, Bay Islands, Honduras.',
+  },
+  {
     title: 'Participation as Speaker',
     event: 'Sustainable Blockchain Summit LATAM',
     period: 'October 2022',
@@ -15,12 +42,6 @@ const speakingEngagements = [
     period: 'July 2022',
     description: 'Participation in panel discussion about the future of DAOs in Latin America and their potential impact on the crypto ecosystem.',
     link: 'https://youtu.be/1VX9JSf6U9s?t=8258',
-  },
-  {
-    title: 'Participation in DeFi Summit',
-    event: 'Próspera DeFi Summit',
-    period: 'December 2022',
-    description: 'Participation in a DeFi summit in Próspera Special Economic Development Zone (ZEDE), in Roatán, Bay Islands, Honduras.',
   },
 ]
 

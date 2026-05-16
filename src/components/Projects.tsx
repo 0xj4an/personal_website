@@ -34,6 +34,18 @@ const projects: Project[] = [
     tags: ['NFTs', 'Forestry', 'ReFi'],
     gradient: 'from-green-700 to-lime-700',
   },
+  {
+    title: 'Farcaster Agent Bot',
+    description: 'Automated Farcaster/Warpcast agent focused on the ReFi and Celo community in Colombia. Posts curated messages (320+) on a randomized 24-hour cycle, auto-engages with community accounts via the Neynar API, and publishes weekly insights with monthly archiving and anti-repetition logic.',
+    tags: ['Farcaster', 'Celo', 'ReFi', 'Node.js', 'Neynar API'],
+    gradient: 'from-purple-500 to-pink-500',
+  },
+  {
+    title: 'VigilBot.eth (ETHPrague 2026 Hackathon)',
+    description: 'Co-built an autonomous AI security agent that monitors Ethereum proxy contract upgrades in real time. On detecting an EIP-1967 upgrade, it verifies the new implementation on Sourcify, compares storage layouts and ABIs, scores severity, and generates plain-English summaries via GPT-4o. The agent autonomously pays for contextual intelligence via Apify micropayments, publishes findings permanently to Swarm, sends Telegram alerts, and records reputation on ENS subdomains under vigilbot.eth. Won the Swarm "Ethereum Chain State on Swarm" bounty.',
+    tags: ['ETHPrague 2026', 'AI Agent', 'Ethereum Security', 'Swarm', 'ENS', 'TypeScript', 'GPT-4o'],
+    gradient: 'from-indigo-500 to-violet-500',
+  },
 ]
 
 export default function Projects() {
