@@ -9,6 +9,7 @@ import About from '@/components/About'
 import Experience from '@/components/Experience'
 import Governance from '@/components/Governance'
 import Speaker from '@/components/Speaker'
+import UpcomingEvents from '@/components/UpcomingEvents'
 import ShootingStars from '@/components/ShootingStars'
 import Projects from '@/components/Projects'
 import Studies from '@/components/Studies'
@@ -147,6 +148,7 @@ const sections: Section[] = [
     gradient: 'from-green-500 to-emerald-500',
     subSections: [
       { name: 'Events', color: '#4ade80', Component: Experience, gradient: 'from-green-500 to-emerald-500' },
+      { name: 'Upcoming', color: '#4ade80', Component: UpcomingEvents, gradient: 'from-green-500 to-emerald-500' },
       { name: 'Speaker', color: '#4ade80', Component: Speaker, gradient: 'from-green-500 to-emerald-500' },
       { name: 'Governance', color: '#4ade80', Component: Governance, gradient: 'from-green-500 to-emerald-500' },
     ],
