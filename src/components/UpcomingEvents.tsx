@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { upcomingEvents, type UpcomingEvent } from '@/data/upcomingEvents'
 
@@ -189,7 +190,13 @@ function MonthGrid({
 }
 
 export default function UpcomingEvents() {
-  const nowDate = new Date()
+  // Dates depend on the viewer's clock, so render only after mount to avoid hydration mismatches.
+  const [nowDate, setNowDate] = useState<Date | null>(null)
+  useEffect(() => setNowDate(new Date()), [])
+  if (!nowDate) {
+    return <section className="bg-black py-6 text-gray-400">Loading events...</section>
+  }
+
   const now = nowDate.getTime()
   const currentKey = monthKey(nowDate)
 

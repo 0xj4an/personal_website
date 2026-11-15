@@ -18,6 +18,7 @@ import Contact from '@/components/Contact'
 import Modal from '@/components/Modal'
 import LoadingScreen from '@/components/LoadingScreen'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import Section from '../components/Section'
 import FloatingElement from '../components/FloatingElement'
 import Comet from '../components/Comet'
@@ -409,6 +410,15 @@ export default function Home() {
       <LoadingScreen isLoaded={isLoaded} />
       <div className="relative h-screen w-full bg-black overflow-hidden">
         <HolographicTitle isHidden={activeSection.isOpen} />
+        {!activeSection.isOpen && (
+          <Link
+            href="/events"
+            className="absolute top-6 right-6 z-10 rounded-full border border-green-400/40 bg-black/60 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-green-200 backdrop-blur transition-colors hover:bg-green-400/20"
+            style={{ fontFamily: "'SF Mono', 'Fira Code', monospace" }}
+          >
+            Upcoming events
+          </Link>
+        )}
 
         <Canvas
           camera={{ position: [0, 0, 45], fov: 50 }}
