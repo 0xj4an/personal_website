@@ -5,7 +5,8 @@ export type EventKind =
   | 'Program'
   | 'Pop-up city'
   | 'Call for speakers'
-  | 'Networking'
+  | 'Course'
+  | 'Community call'
 
 export interface EventLink {
   label: string
@@ -21,7 +22,10 @@ export interface UpcomingEvent {
   // ISO dates (YYYY-MM-DD). Omit for events without confirmed dates.
   start?: string
   end?: string
-  // Application or registration deadline, if any.
+  // True when only the month is known (start/end span the whole month).
+  monthOnly?: boolean
+  // Major events on the watchlist, shown first.
+  featured?: boolean
   deadline?: string
   deadlineLabel?: string
   applicationsOpen?: boolean
@@ -29,70 +33,148 @@ export interface UpcomingEvent {
   links: EventLink[]
 }
 
-// Last reviewed: 2026-11-07. Source of truth: dashboards/events.md on the VPS.
+// Last reviewed: 2026-11-16. Source of truth: dashboards/events.md on the VPS.
+// Only public events with official links. No rumors, no internal deadlines.
 export const upcomingEvents: UpcomingEvent[] = [
+  // Major events (watchlist)
   {
-    name: 'Codigo Cordillera',
+    name: 'ETHDenver 10',
+    kind: 'Conference',
+    location: 'Denver, USA',
+    dateLabel: 'Mar 24-25, 2027',
+    start: '2027-03-24',
+    end: '2027-03-25',
+    featured: true,
+    description: 'Tenth edition of ETHDenver. Venue and registration details coming soon.',
+    links: [
+      { label: 'Official site', url: 'https://ethdenver.com', primary: true },
+    ],
+  },
+  {
+    name: 'EthCC[10]',
+    kind: 'Conference',
+    location: 'Palais des Festivals, Cannes, France',
+    dateLabel: 'Apr 12-15, 2027',
+    start: '2027-04-12',
+    end: '2027-04-15',
+    featured: true,
+    deadline: '2027-01-31',
+    deadlineLabel: 'Full Pass 590 EUR until Jan 31, then 750 EUR',
+    applicationsOpen: true,
+    description: 'Tenth edition of the Ethereum Community Conference. Speaker applications are open. Topics include decentralization, tokenization, privacy, regulation, infrastructure, responsible AI and institutional adoption.',
+    links: [
+      { label: 'Apply to speak', url: 'https://ethcc.io/forms/speakers', primary: true },
+      { label: 'Tickets', url: 'https://ethcc.io/tickets' },
+      { label: 'Volunteer / student access', url: 'https://ethcc.io/tickets#community' },
+      { label: 'Official site', url: 'https://ethcc.io' },
+    ],
+  },
+  {
+    name: 'ETHCluj 2027',
+    kind: 'Conference',
+    location: 'Cluj-Napoca, Romania',
+    dateLabel: 'May 2027 (exact dates TBA)',
+    start: '2027-05-01',
+    end: '2027-05-31',
+    monthOnly: true,
+    featured: true,
+    description: 'Third edition of "Ethereum for Everyone". Dates, CFP and tickets not announced yet.',
+    links: [
+      { label: 'Official site', url: 'https://ethcluj.org', primary: true },
+    ],
+  },
+  {
+    name: 'ETHPrague 2027',
     kind: 'Hackathon',
-    location: 'Online',
-    dateLabel: 'Nov 6-8, 2026',
-    start: '2026-11-06',
-    end: '2026-11-08',
-    description: '48-hour online hackathon on Stellar, organized by BAF and born in Colombia.',
+    location: 'Prague, Czechia',
+    dateLabel: 'May 28-30, 2027',
+    start: '2027-05-28',
+    end: '2027-05-30',
+    featured: true,
+    description: 'Three days fully focused on the hackathon and builders, exploring Ethereum and AI. Subscribe to get notified when applications open.',
     links: [
-      { label: 'Event page', url: 'https://www.thebafnetwork.com/hackathons/co/codigo-cordillera', primary: true },
+      { label: 'Newsletter', url: 'https://ethprague.com', primary: true },
     ],
   },
   {
-    name: 'GoodBuilders Season 5',
-    kind: 'Program',
-    location: 'Online (Celo)',
-    dateLabel: 'Kickoff Nov 9, 2026',
-    start: '2026-11-09',
-    end: '2026-11-09',
-    applicationsOpen: true,
-    description: 'USD 50K+ in G$ streamed over about 3 months for teams building on Celo, with mentorship, weekly 1:1s and Demo Days. Open to new and returning teams.',
+    name: 'Devcon 9',
+    kind: 'Conference',
+    location: 'CCL Lisbon Congress Centre, Portugal',
+    dateLabel: 'Oct 12-14, 2027',
+    start: '2027-10-12',
+    end: '2027-10-14',
+    featured: true,
+    description: 'The Ethereum Foundation developer conference comes to Lisbon. Tickets, CFP and scholarships not announced yet. Join the waitlist.',
     links: [
-      { label: 'Apply', url: 'https://ubi.gd/gbuilders5', primary: true },
-      { label: 'Become a mentor', url: 'https://ubi.gd/mentors' },
+      { label: 'Join waitlist', url: 'https://devcon.org/lisbon/', primary: true },
+      { label: 'Official site', url: 'https://devcon.org' },
     ],
   },
+
+  // Other events and opportunities
   {
-    name: 'DAS Week networking',
-    kind: 'Networking',
+    name: 'Solana Breakpoint 2026',
+    kind: 'Conference',
     location: 'London, UK',
-    dateLabel: 'Nov 11, 2026',
-    start: '2026-11-11',
-    end: '2026-11-11',
-    description: 'Evening networking for digital asset and AI operators and investors during Digital Asset Summit week.',
+    dateLabel: 'Nov 15-17, 2026',
+    start: '2026-11-15',
+    end: '2026-11-17',
+    description: 'Solana Breakpoint plus 100+ side events around it.',
     links: [
-      { label: 'Register', url: 'https://luma.com/j6gxeshu', primary: true },
+      { label: 'Side events', url: 'https://miragather.com/Breakpoint2026SideEvents2026', primary: true },
     ],
   },
   {
-    name: 'American Fintech Council side event',
+    name: 'Codigo 402',
+    kind: 'Course',
+    location: 'Online (Spanish)',
+    dateLabel: 'Nov 10-27, 2026',
+    start: '2026-11-10',
+    end: '2026-11-27',
+    applicationsOpen: true,
+    description: 'Free 5-session course plus Demo Day by BAF Mexico, Stellar Ambassador Program and Nirium. Build an x402 API and an agent that pays on its own.',
+    links: [
+      { label: 'Register', url: 'https://luma.com/ljzvwv35', primary: true },
+    ],
+  },
+  {
+    name: 'DeCompute',
+    kind: 'Conference',
+    location: 'Singapore',
+    dateLabel: 'Nov 18, 2026',
+    start: '2026-11-18',
+    end: '2026-11-18',
+    description: 'One day on privacy, fraud and AML, and agentic AI, during Singapore FinTech Festival week.',
+    links: [
+      { label: 'Register', url: 'https://luma.com/decompute-tc6t', primary: true },
+    ],
+  },
+  {
+    name: 'ETH Lima Builders Series: De la idea a la dApp',
     kind: 'Call for speakers',
-    location: 'Washington D.C., USA',
-    dateLabel: 'Nov 16, 2026',
-    start: '2026-11-16',
-    end: '2026-11-16',
+    location: 'Online',
+    dateLabel: 'Nov 21, 2026 (CFP rolling)',
+    start: '2026-11-21',
+    end: '2026-11-21',
     applicationsOpen: true,
-    description: 'Side event during the American Fintech Council week. Organizers are looking for speakers and sponsors.',
+    description: 'Virtual session of the ETH Lima Builders Series. The series keeps a rolling call for speakers on Ethereum, Web3 and AI.',
     links: [
-      { label: 'Event page', url: 'https://luma.com/6yihjk9j', primary: true },
+      { label: 'Apply to speak', url: 'https://tally.so/r/ODJBxp', primary: true },
+      { label: 'Join the session', url: 'https://luma.com/jv3l3a24' },
+      { label: 'Series page', url: 'https://www.ethlima.org/es/events/builder-series' },
     ],
   },
   {
-    name: 'Instawards LATAM (November cohort)',
-    kind: 'Grant',
-    location: 'Online (Stellar)',
-    dateLabel: 'November 2026',
-    start: '2026-11-01',
-    end: '2026-11-30',
+    name: 'BNB Chain Build, Demo and Pitch',
+    kind: 'Hackathon',
+    location: 'Bangkok, Thailand',
+    dateLabel: 'Nov 25-27, 2026',
+    start: '2026-11-25',
+    end: '2026-11-27',
     applicationsOpen: true,
-    description: 'BAF and Stellar fund 30-day sprints with up to USD 5,000 in XLM for teams building on Stellar.',
+    description: '36-hour hackathon around Binance Blockchain Week. AI, trading and RWA tracks, USD 100K+ in prizes.',
     links: [
-      { label: 'Apply', url: 'https://instawards.netlify.app/', primary: true },
+      { label: 'Details', url: 'https://www.bnbchain.org/en/blog/bnb-bangkok-build-demo-and-pitch', primary: true },
     ],
   },
   {
@@ -108,30 +190,29 @@ export const upcomingEvents: UpcomingEvent[] = [
     ],
   },
   {
+    name: 'Instawards LATAM (November cohort)',
+    kind: 'Grant',
+    location: 'Online (Stellar)',
+    dateLabel: 'November 2026',
+    start: '2026-11-01',
+    end: '2026-11-30',
+    monthOnly: true,
+    applicationsOpen: true,
+    description: 'BAF and Stellar fund 30-day sprints with up to USD 5,000 in XLM for teams building on Stellar.',
+    links: [
+      { label: 'Apply', url: 'https://instawards.netlify.app/', primary: true },
+    ],
+  },
+  {
     name: 'Blockchain Life 2026',
     kind: 'Conference',
     location: 'Dubai, UAE',
     dateLabel: 'Dec 1-2, 2026',
     start: '2026-12-01',
     end: '2026-12-02',
-    description: '17th edition of the forum at Festival Arena, with 100+ side events from Nov 27 to Dec 6.',
+    description: '17th edition at Festival Arena, with 100+ side events from Nov 27 to Dec 6.',
     links: [
       { label: 'Official site', url: 'https://blockchain-life.com/', primary: true },
-    ],
-  },
-  {
-    name: 'Proof of Talk Abu Dhabi',
-    kind: 'Conference',
-    location: 'Louvre Abu Dhabi, UAE',
-    dateLabel: 'Dec 3-4, 2026',
-    start: '2026-12-03',
-    end: '2026-12-04',
-    deadline: '2026-11-22',
-    deadlineLabel: 'Applications close Nov 22',
-    applicationsOpen: true,
-    description: 'Executive summit on digital assets and AI. Attendance is by curated application only. Includes StableDay on Dec 3.',
-    links: [
-      { label: 'Apply to attend', url: 'https://proofoftalk.io/abu-dhabi/', primary: true },
     ],
   },
   {
@@ -147,15 +228,27 @@ export const upcomingEvents: UpcomingEvent[] = [
     ],
   },
   {
-    name: 'HSC Asset Management',
+    name: 'HSC Asset Management Conference',
     kind: 'Conference',
     location: 'Abu Dhabi, UAE',
-    dateLabel: 'Dec 9-10, 2026',
+    dateLabel: 'Dec 9, 2026',
     start: '2026-12-09',
-    end: '2026-12-10',
-    description: 'Asset management event during Abu Dhabi Finance Week.',
+    end: '2026-12-09',
+    description: 'Asset management conference during Abu Dhabi Finance Week.',
     links: [
-      { label: 'Event page', url: 'https://luma.com/HSC_Abu_Dhabi', primary: true },
+      { label: 'Register', url: 'https://luma.com/HSC_Abu_Dhabi', primary: true },
+    ],
+  },
+  {
+    name: 'ReFi DAO year-end network check-in',
+    kind: 'Community call',
+    location: 'Online',
+    dateLabel: 'Dec 9, 2026',
+    start: '2026-12-09',
+    end: '2026-12-09',
+    description: '2026 recap and where ReFi DAO is heading in 2027, with the local node network.',
+    links: [
+      { label: 'Register', url: 'https://luma.com/qc0hv9de', primary: true },
     ],
   },
   {
@@ -163,7 +256,7 @@ export const upcomingEvents: UpcomingEvent[] = [
     kind: 'Grant',
     location: 'Online (Celo)',
     dateLabel: 'Open until Dec 29, 2026',
-    start: '2026-08-12',
+    start: '2026-12-29',
     end: '2026-12-29',
     deadline: '2026-12-29',
     deadlineLabel: 'Applications close Dec 29',
@@ -173,18 +266,6 @@ export const upcomingEvents: UpcomingEvent[] = [
       { label: 'Apply to Frontier', url: 'https://frontier.prezenti.xyz', primary: true },
       { label: 'Apply to Anchor', url: 'https://anchor.prezenti.xyz' },
       { label: 'Program details', url: 'https://forum.celo.org/t/prezenti-season-3-is-open-frontier-anchor-and-boost-grants-for-celo/13714' },
-    ],
-  },
-  {
-    name: 'ETH Lima Builders Series',
-    kind: 'Call for speakers',
-    location: 'Online',
-    dateLabel: 'Rolling',
-    applicationsOpen: true,
-    description: 'Ethereum Lima is looking for speakers on Ethereum, Web3, AI and emerging tech for its Builders Series.',
-    links: [
-      { label: 'Apply to speak', url: 'https://tally.so/r/ODJBxp', primary: true },
-      { label: 'Series page', url: 'https://www.ethlima.org/es/events/builder-series' },
     ],
   },
   {
@@ -200,80 +281,28 @@ export const upcomingEvents: UpcomingEvent[] = [
       { label: 'Manifesto', url: 'https://airy-marlin-b52.notion.site/masa-madre-manifesto-3eb0645334a7806fb143e6ccc4736aec', primary: true },
     ],
   },
+
+  // Rolling, no fixed date
   {
-    name: 'EthCC[10]',
-    kind: 'Conference',
-    location: 'Palais des Festivals, Cannes, France',
-    dateLabel: 'Apr 12-15, 2027',
-    start: '2027-04-12',
-    end: '2027-04-15',
-    deadline: '2027-01-31',
-    deadlineLabel: 'Full Pass 590 EUR until Jan 31, then 750 EUR',
+    name: 'Arbitrum Mentorship Program, Cohort 2',
+    kind: 'Program',
+    location: 'Online',
+    dateLabel: 'Rolling, limited spots',
     applicationsOpen: true,
-    description: 'Tenth edition of the Ethereum Community Conference. Speaker applications are open.',
+    description: '12-week mentorship for teams building on Arbitrum One and Robinhood Chain: product, GTM, growth, fundraising.',
     links: [
-      { label: 'Apply to speak', url: 'https://ethcc.io/forms/speakers', primary: true },
-      { label: 'Tickets', url: 'https://ethcc.io/tickets' },
-      { label: 'Official site', url: 'https://ethcc.io' },
+      { label: 'Apply', url: 'https://tally.so/r/Xx6xqO', primary: true },
     ],
   },
   {
-    name: 'ETHCluj 2027',
-    kind: 'Conference',
-    location: 'Cluj-Napoca, Romania',
-    dateLabel: 'May 2027 (exact dates TBA)',
-    start: '2027-05-01',
-    end: '2027-05-31',
-    description: 'Third edition of "Ethereum for Everyone". Dates, CFP and tickets not announced yet.',
-    links: [
-      { label: 'Official site', url: 'https://ethcluj.org', primary: true },
-    ],
-  },
-  {
-    name: 'ETHPrague 2027',
-    kind: 'Hackathon',
-    location: 'Prague, Czechia',
-    dateLabel: 'May 28-30, 2027',
-    start: '2027-05-28',
-    end: '2027-05-30',
-    description: 'Three days fully focused on the hackathon and builders, exploring Ethereum and AI. Subscribe to get notified when applications open.',
-    links: [
-      { label: 'Newsletter', url: 'https://ethprague.com', primary: true },
-    ],
-  },
-  {
-    name: 'Devcon 9',
-    kind: 'Conference',
-    location: 'Lisbon, Portugal',
-    dateLabel: 'Oct 11-13, 2027',
-    start: '2027-10-11',
-    end: '2027-10-13',
-    description: 'The Ethereum Foundation developer conference comes to Lisbon. Venue, tickets and CFP not announced yet.',
-    links: [
-      { label: 'Official site', url: 'https://devcon.org', primary: true },
-      { label: 'Announcement', url: 'https://x.com/efdevcon/status/2118664094819782946' },
-    ],
-  },
-  {
-    name: 'Stable Summit IV',
-    kind: 'Call for speakers',
-    location: 'London, UK',
-    dateLabel: 'Date TBA',
+    name: 'Mozilla Foundation Human-Scale AI incubator',
+    kind: 'Grant',
+    location: 'Online',
+    dateLabel: 'Call for proposals',
     applicationsOpen: true,
-    description: 'Stablecoin-focused summit. Speaker applications are open.',
+    description: 'Mozilla Foundation incubator call for human-scale AI projects.',
     links: [
-      { label: 'Apply to speak', url: 'https://dash.agendaforge.app/submit/stable-summit-iv-london/speaker-application-form-stable-summit-iv-london', primary: true },
-      { label: 'Speakers page', url: 'https://www.stablesummit.xyz/speakers' },
-    ],
-  },
-  {
-    name: 'ETHDenver 2027',
-    kind: 'Conference',
-    location: 'Denver, USA',
-    dateLabel: 'Not announced yet',
-    description: 'No official dates yet. The 2026 edition ran Feb 17-21.',
-    links: [
-      { label: 'Official site', url: 'https://ethdenver.com', primary: true },
+      { label: 'Call for proposals', url: 'https://www.mozillafoundation.org/en/what-we-do/grantmaking/incubator/human-scale-ai/call-for-proposals/', primary: true },
     ],
   },
 ]
