@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useMemo, useState } from 'react'
+import SectionHeader from './SectionHeader'
 
 const proposals = [
   // 2026
@@ -41,82 +42,112 @@ const statusColors: Record<string, string> = {
   DRAFT: 'bg-yellow-500/20 text-yellow-400',
 }
 
+const ACCENT = '#34d399'
+
 export default function Governance() {
+  const [query, setQuery] = useState('')
+  const [status, setStatus] = useState<string | null>(null)
+  const [role, setRole] = useState<string | null>(null)
+
+  const statuses = useMemo(() => Array.from(new Set(proposals.map((p) => p.status))), [])
+  const roles = useMemo(() => Array.from(new Set(proposals.map((p) => p.role))), [])
+  const q = query.trim().toLowerCase()
+  const filtered = proposals.filter(
+    (p) =>
+      (!q || [p.cgp, p.title, p.description, p.date].join(' ').toLowerCase().includes(q)) &&
+      (!status || p.status === status) &&
+      (!role || p.role === role)
+  )
+  const executed = proposals.filter((p) => p.status === 'EXECUTED').length
+
+  const chip = (active: boolean) =>
+    active
+      ? { borderColor: ACCENT, background: `${ACCENT}22`, color: '#ffffff' }
+      : { borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.65)' }
+  const chipClass =
+    'rounded-full border px-3 py-1 text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60'
+
   return (
-    <section className="min-h-screen bg-black py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-white sm:text-4xl"
-        >
-          Governance
-        </motion.h2>
+    <div>
+      <SectionHeader
+        kicker="04 / Governance"
+        title="Governance"
+        intro={`Celo Governance Guardian: overseeing the CGP process, reviewing proposals and facilitating community governance. ${proposals.length} proposals, ${executed} executed.`}
+        color={ACCENT}
+      />
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-4 text-gray-400"
-        >
-          Celo Governance Guardian. Overseeing the CGP process, reviewing proposals, and facilitating community governance.
-        </motion.p>
-
-        <div className="mt-12 space-y-6">
-          {proposals.map((proposal, index) => (
-            <motion.div
-              key={proposal.cgp}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.05 }}
-              className="relative pl-8 border-l-2 border-white/10 hover:bg-white/5 rounded-r-lg transition-colors py-4"
-            >
-              <div className="absolute left-0 top-0 -translate-x-2 -translate-y-1">
-                <div className="h-4 w-4 rounded-full bg-emerald-400"></div>
-              </div>
-              <div className="mb-2">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <a href={proposal.mondoLink} target="_blank" rel="noopener noreferrer" className="text-sm font-mono text-emerald-400 hover:underline">{proposal.cgp}</a>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColors[proposal.status] || ''}`}>
-                    {proposal.status}
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
-                    {proposal.role}
-                  </span>
-                </div>
-                <h3 className="text-lg font-semibold text-white mt-2">{proposal.title}</h3>
-                <p className="text-sm text-gray-500">{proposal.date}</p>
-                {proposal.description && (
-                  <p className="mt-2 text-gray-300 text-sm">{proposal.description}</p>
-                )}
-                {proposal.link && (
-                  <a href={proposal.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline mt-1 inline-block">
-                    View Discussion
-                  </a>
-                )}
-              </div>
-            </motion.div>
+      <div className="mt-6 space-y-3">
+        <label className="relative block">
+          <span className="sr-only">Search proposals</span>
+          <svg aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <circle cx="11" cy="11" r="7" />
+            <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by CGP number, title or topic"
+            className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-emerald-400/60 focus:outline-none focus:ring-1 focus:ring-emerald-400/40"
+          />
+        </label>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
+          {statuses.map((s) => (
+            <button key={s} type="button" aria-pressed={status === s} onClick={() => setStatus(status === s ? null : s)} className={chipClass} style={chip(status === s)}>
+              {s.charAt(0) + s.slice(1).toLowerCase()}
+            </button>
           ))}
         </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mt-8 pt-6 border-t border-white/10"
-        >
-          <a
-            href="https://github.com/celo-org/governance"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-400 hover:underline"
-          >
-            View Full Governance Repository
-          </a>
-        </motion.div>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by role">
+          {roles.map((r) => (
+            <button key={r} type="button" aria-pressed={role === r} onClick={() => setRole(role === r ? null : r)} className={chipClass} style={chip(role === r)}>
+              {r}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500" aria-live="polite">
+          {filtered.length} of {proposals.length} proposals
+        </p>
       </div>
-    </section>
+
+      <div className="mt-5 space-y-3">
+        {filtered.map((proposal) => (
+          <article
+            key={proposal.cgp}
+            className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition-colors hover:border-white/20"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={proposal.mondoLink} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-emerald-400 hover:underline">
+                {proposal.cgp}
+              </a>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusColors[proposal.status] || ''}`}>
+                {proposal.status}
+              </span>
+              <span className="rounded-full bg-purple-500/20 px-2 py-0.5 text-[11px] text-purple-300">{proposal.role}</span>
+              <span className="ml-auto font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500">{proposal.date}</span>
+            </div>
+            <h3 className="mt-2 font-semibold leading-snug text-white">{proposal.title}</h3>
+            {proposal.description && <p className="mt-1.5 text-sm leading-relaxed text-gray-300">{proposal.description}</p>}
+            {proposal.link && (
+              <a href={proposal.link} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-blue-300 hover:underline">
+                View discussion
+              </a>
+            )}
+          </article>
+        ))}
+        {filtered.length === 0 && (
+          <p className="rounded-xl border border-white/10 p-6 text-center text-sm text-gray-400">No proposals match these filters.</p>
+        )}
+      </div>
+
+      <a
+        href="https://github.com/celo-org/governance"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-6 inline-block text-sm text-blue-300 hover:underline"
+      >
+        View full governance repository
+      </a>
+    </div>
   )
 }

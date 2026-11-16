@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 
 const studies = [
   {
@@ -14,36 +15,28 @@ const studies = [
   },
   {
     degree: "Master's degree in Project Management.",
-  }
+  },
+  {
+    degree: "Specialist in State Contracting.",
+  },
 ]
 
 export default function Studies() {
   return (
     <div className="text-white">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 text-3xl font-bold sm:text-4xl"
-      >
-        Education
-      </motion.h2>
-      
-      <div className="space-y-8">
+      <SectionHeader kicker="03 / Education" title="Studies" color="#ffd700" />
+
+      <div className="mt-8 space-y-3">
         {studies.map((study, index) => (
           <motion.div
             key={study.degree}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.2 }}
-            className="rounded-lg bg-white/5 border border-white/10 p-6"
+            transition={{ delay: index * 0.06 }}
+            className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-4"
           >
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-yellow-400 flex-shrink-0" />
-                <h3 className="text-xl font-semibold text-white">{study.degree}</h3>
-              </div>
-              {/* Removed school, period, and description rendering */}
-            </div>
+            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-yellow-400" style={{ boxShadow: '0 0 8px #ffd700' }} />
+            <h3 className="font-semibold text-white">{study.degree.replace(/\.$/, '')}</h3>
           </motion.div>
         ))}
       </div>

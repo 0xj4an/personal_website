@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 
 const speakingEngagements = [
   {
@@ -45,49 +46,46 @@ const speakingEngagements = [
   },
 ]
 
+const ACCENT = '#4ade80'
+
 export default function Speaker() {
   return (
-    <section className="min-h-screen bg-black py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-white sm:text-4xl"
-        >
-          Speaking
-        </motion.h2>
+    <div>
+      <SectionHeader
+        kicker="04 / Speaking"
+        title="Speaking"
+        intro="Keynotes, talks and panels on stablecoins, virtual state blockchains, DAOs and ReFi."
+        color={ACCENT}
+      />
 
-        <div className="mt-12 space-y-8">
-          {speakingEngagements.map((talk, index) => (
-            <motion.div
-              key={talk.title}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="relative pl-8 border-l-2 border-white/10 hover:bg-white/5 rounded-r-lg transition-colors py-4"
-            >
-              <div className="absolute left-0 top-0 -translate-x-2 -translate-y-1">
-                <div className="h-4 w-4 rounded-full bg-green-400"></div>
-              </div>
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-white">{talk.title}</h3>
-                <p className="text-gray-400">{talk.event}</p>
-                <p className="text-sm text-gray-500">{talk.period}</p>
-                {talk.description && (
-                  <p className="mt-2 text-gray-300">{talk.description}</p>
-                )}
-                {talk.link && (
-                  <a href={talk.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline mt-1 inline-block">
-                    Watch Video
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      <div className="mt-8 space-y-4">
+        {speakingEngagements.map((talk, index) => (
+          <motion.article
+            key={talk.title}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-white/20"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500">{talk.period}</span>
+              <span className="text-xs" style={{ color: ACCENT }}>{talk.event}</span>
+            </div>
+            <h3 className="mt-2 font-semibold leading-snug text-white">{talk.title}</h3>
+            {talk.description && <p className="mt-2 text-sm leading-relaxed text-gray-300">{talk.description}</p>}
+            {talk.link && (
+              <a
+                href={talk.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center rounded-md bg-green-500/15 px-3 py-1 text-xs font-medium text-green-200 transition-colors hover:bg-green-500/25"
+              >
+                Watch video
+              </a>
+            )}
+          </motion.article>
+        ))}
       </div>
-    </section>
+    </div>
   )
 }

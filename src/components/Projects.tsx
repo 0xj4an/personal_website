@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 
 interface Project {
   title: string;
@@ -50,29 +51,21 @@ const projects: Project[] = [
 
 export default function Projects() {
   return (
-    <section id="projects" className="min-h-screen bg-black py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-white sm:text-4xl"
-        >
-          Projects
-        </motion.h2>
+    <div>
+      <div>
+        <SectionHeader kicker="06 / Builds" title="Projects" color="#ff79c6" />
 
-        <div className="mt-12 flex flex-col gap-6">
+        <div className="mt-8 flex flex-col gap-4">
           {projects.map((project, index) => (
             <motion.div
               key={project.title}
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="border-b border-white/10 pb-6 last:border-b-0"
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-white/20"
             >
-              <div className="p-0">
-                <h3 className="text-xl font-semibold text-white">{project.title}</h3>
+              <div>
+                <h3 className="font-semibold text-white">{project.title}</h3>
                 <p className="mt-2 text-sm text-gray-300">{project.description}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {project.tags.map((tag) => (
@@ -89,6 +82,6 @@ export default function Projects() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   )
 } 

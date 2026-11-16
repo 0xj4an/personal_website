@@ -98,7 +98,9 @@ export default function GalacticDust() {
         <pointsMaterial
           vertexColors
           transparent
-          opacity={0.45}
+          // Higher than before: ACES tone mapping at the end of the pipeline
+          // compresses these additive points.
+          opacity={0.75}
           sizeAttenuation
           size={0.12}
           depthWrite={false}
@@ -115,7 +117,7 @@ export default function GalacticDust() {
         <pointsMaterial
           vertexColors
           transparent
-          opacity={0.6}
+          opacity={0.8}
           sizeAttenuation
           size={0.1}
           depthWrite={false}
