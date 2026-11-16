@@ -1,10 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 import { useState } from 'react'
 
-// Get your free access key at https://web3forms.com (enter hello@0xj4an.xyz)
-const WEB3FORMS_KEY = 'YOUR_ACCESS_KEY_HERE'
+// Web3Forms access keys are public by design (https://web3forms.com).
+// Set NEXT_PUBLIC_WEB3FORMS_KEY in the deployment env. Without it the form is
+// replaced by a direct email link, so visitors never hit a form that cannot send.
+const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY ?? ''
+const CONTACT_EMAIL = 'hello@0xj4an.xyz'
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -48,24 +52,22 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="min-h-screen bg-black py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mx-auto max-w-3xl"
-        >
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl font-bold text-white sm:text-4xl"
-          >
-            Contact Me
-          </motion.h2>
+    <div>
+      <div>
+        <div>
+          <SectionHeader kicker="02 / Say hi" title="Contact" intro="Collaborations, talks, governance or just a hello." color="#4dd0e1" />
 
-          {status === 'sent' ? (
+          {!WEB3FORMS_KEY ? (
+            <div className="mt-8 rounded-lg border border-white/10 bg-white/5 p-8 text-center">
+              <p className="text-gray-300">The best way to reach me is by email.</p>
+              <a
+                href={`mailto:${CONTACT_EMAIL}`}
+                className="mt-4 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900"
+              >
+                {CONTACT_EMAIL}
+              </a>
+            </div>
+          ) : status === 'sent' ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -99,7 +101,7 @@ export default function Contact() {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-white focus:ring-white sm:text-sm"
+                  className="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-cyan-400/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/40"
                 />
               </div>
 
@@ -114,7 +116,7 @@ export default function Contact() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-white focus:ring-white sm:text-sm"
+                  className="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-cyan-400/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/40"
                 />
               </div>
 
@@ -129,12 +131,15 @@ export default function Contact() {
                   value={formData.message}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-700 bg-gray-800 text-white shadow-sm focus:border-white focus:ring-white sm:text-sm"
+                  className="mt-1.5 block w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2.5 text-sm text-white placeholder:text-gray-500 focus:border-cyan-400/60 focus:outline-none focus:ring-1 focus:ring-cyan-400/40"
                 />
               </div>
 
               {status === 'error' && (
-                <p className="text-sm text-red-400">Something went wrong. Please try again.</p>
+                <p role="alert" className="text-sm text-red-400">
+                  Something went wrong. Please try again or email{' '}
+                  <a href={`mailto:${CONTACT_EMAIL}`} className="underline">{CONTACT_EMAIL}</a>.
+                </p>
               )}
 
               <motion.button
@@ -148,8 +153,8 @@ export default function Contact() {
               </motion.button>
             </motion.form>
           )}
-        </motion.div>
+        </div>
       </div>
-    </section>
+    </div>
   )
 }

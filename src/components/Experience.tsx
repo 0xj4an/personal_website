@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 
 const experiences = [
   {
@@ -32,10 +33,10 @@ const experiences = [
     link: 'https://youtu.be/QoPFqV6jCTI'
   },
   {
-    title: 'Volunteer Lead for ETHGlobal Instanbul',
+    title: 'Volunteer Lead for ETHGlobal Istanbul',
     company: 'ETHGlobal',
     period: 'October 2023',
-    description: 'Supporting ETHGlobal as Volunteer Lead helping with the logistics of the ETHGlobal Instanbul Pragma & Hackathon.',
+    description: 'Supporting ETHGlobal as Volunteer Lead helping with the logistics of the ETHGlobal Istanbul Pragma & Hackathon.',
     link: 'https://youtu.be/IHbLrA44KDw'
   },
   {
@@ -74,10 +75,10 @@ const experiences = [
     link: 'https://youtu.be/FWcAjKGW8gU'
   },
   {
-    title: 'Volunteer for ETHGlobal SanFrancisco',
+    title: 'Volunteer for ETHGlobal San Francisco',
     company: 'ETHGlobal',
     period: 'November 2022',
-    description: 'Supporting ETHGlobal as Volunteer helping with the logistics of the ETHGlobal SanFrancisco Hackathon.',
+    description: 'Supporting ETHGlobal as Volunteer helping with the logistics of the ETHGlobal San Francisco Hackathon.',
     link: 'https://youtu.be/fHiIMvGLBZc'
   },
   {
@@ -89,49 +90,65 @@ const experiences = [
   },
 ]
 
-export default function Experience() {
-  return (
-    <section id="experience" className="min-h-screen bg-black py-20">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-white sm:text-4xl"
-        >
-          Events
-        </motion.h2>
+const ACCENT = '#4ade80'
 
-        <div className="mt-12 space-y-8">
-          {experiences.map((exp, index) => (
-            <motion.div
-              key={exp.title}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="relative pl-8 border-l-2 border-white/10 hover:bg-white/5 rounded-r-lg transition-colors py-4"
-            >
-              <div className="absolute left-0 top-0 -translate-x-2 -translate-y-1">
-                <div className="h-4 w-4 rounded-full bg-green-400"></div>
-              </div>
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-white">{exp.title}</h3>
-                <p className="text-gray-400">{exp.company}</p>
-                <p className="text-sm text-gray-500">{exp.period}</p>
-                {exp.description && (
-                  <p className="mt-2 text-gray-300">{exp.description}</p>
-                )}
+export default function Experience() {
+  // Group by year (data is already newest first).
+  const years: { year: string; items: typeof experiences }[] = []
+  for (const exp of experiences) {
+    const year = exp.period.split(' ').pop() ?? ''
+    const group = years.find((g) => g.year === year)
+    if (group) group.items.push(exp)
+    else years.push({ year, items: [exp] })
+  }
+
+  return (
+    <div>
+      <SectionHeader
+        kicker="04 / Events"
+        title="Events"
+        intro={`${experiences.length} Ethereum events supported as volunteer, volunteer lead and steward.`}
+        color={ACCENT}
+      />
+
+      {years.map(({ year, items }) => (
+        <section key={year} className="mt-8">
+          <h3 className="font-mono text-xs uppercase tracking-[0.25em] text-gray-400">{year}</h3>
+          <ol className="mt-3 space-y-3 border-l border-white/10 pl-5">
+            {items.map((exp, index) => (
+              <motion.li
+                key={exp.title}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.04 }}
+                className="relative rounded-xl border border-white/[0.08] bg-white/[0.02] p-4 transition-colors hover:border-white/20"
+              >
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-[27px] top-5 h-2.5 w-2.5 rounded-full"
+                  style={{ background: ACCENT, boxShadow: `0 0 8px ${ACCENT}` }}
+                />
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.15em] text-gray-500">{exp.period}</span>
+                  <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-gray-300">{exp.company}</span>
+                </div>
+                <h4 className="mt-1.5 font-semibold text-white">{exp.title}</h4>
+                {exp.description && <p className="mt-1.5 text-sm leading-relaxed text-gray-300">{exp.description}</p>}
                 {exp.link && (
-                  <a href={exp.link} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">
-                    Watch Recap
+                  <a
+                    href={exp.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-white/10 px-3 py-1 text-xs text-gray-200 transition-colors hover:border-green-400/50 hover:text-white"
+                  >
+                    Watch recap
                   </a>
                 )}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
+              </motion.li>
+            ))}
+          </ol>
+        </section>
+      ))}
+    </div>
   )
-} 
+}

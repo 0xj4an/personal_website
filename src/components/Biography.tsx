@@ -1,17 +1,14 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 
 export default function Biography() {
   return (
     <div className="text-white">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 text-3xl font-bold sm:text-4xl"
-      >
-        My Journey
-      </motion.h2>
+      <div className="mb-8">
+        <SectionHeader kicker="01 / Story" title="My Journey" color="#64ffda" />
+      </div>
 
       <motion.p
         initial={{ opacity: 0, x: -20 }}

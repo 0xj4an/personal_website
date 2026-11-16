@@ -1,405 +1,432 @@
 'use client';
 
-import { useRef, useState, forwardRef, useMemo } from 'react';
-import { useFrame, extend } from '@react-three/fiber';
-import { Html, shaderMaterial } from '@react-three/drei';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
+import { Billboard, Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { Section as SectionType, SubSection } from '../app/page';
-import React from 'react';
+import type { SubSection } from '../app/page';
+import { KIND_INDEX, type PlanetLook } from './planetMaterials';
 
-// Shared noise GLSL code (reused by both shaders)
-const NOISE_GLSL = `
-  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
-  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+// drei Html defaults to a z-index near 16.7M, which puts labels above the
+// loading screen, title, section nav and modal. Keep them below all overlays.
+const LABEL_Z_RANGE: [number, number] = [5, 0];
 
-  float snoise(vec3 v) {
-    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-    vec3 i = floor(v + dot(v, C.yyy));
-    vec3 x0 = v - i + dot(i, C.xxx);
-    vec3 g = step(x0.yzx, x0.xyz);
-    vec3 l = 1.0 - g;
-    vec3 i1 = min(g.xyz, l.zxy);
-    vec3 i2 = max(g.xyz, l.zxy);
-    vec3 x1 = x0 - i1 + C.xxx;
-    vec3 x2 = x0 - i2 + C.yyy;
-    vec3 x3 = x0 - D.yyy;
-    i = mod289(i);
-    vec4 p = permute(permute(permute(
-      i.z + vec4(0.0, i1.z, i2.z, 1.0))
-      + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-      + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-    float n_ = 0.142857142857;
-    vec3 ns = n_ * D.wyz - D.xzx;
-    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-    vec4 x_ = floor(j * ns.z);
-    vec4 y_ = floor(j - 7.0 * x_);
-    vec4 x = x_ * ns.x + ns.yyyy;
-    vec4 y = y_ * ns.x + ns.yyyy;
-    vec4 h = 1.0 - abs(x) - abs(y);
-    vec4 b0 = vec4(x.xy, y.xy);
-    vec4 b1 = vec4(x.zw, y.zw);
-    vec4 s0 = floor(b0) * 2.0 + 1.0;
-    vec4 s1 = floor(b1) * 2.0 + 1.0;
-    vec4 sh = -step(h, vec4(0.0));
-    vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
-    vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
-    vec3 p0 = vec3(a0.xy, h.x);
-    vec3 p1 = vec3(a0.zw, h.y);
-    vec3 p2 = vec3(a1.xy, h.z);
-    vec3 p3 = vec3(a1.zw, h.w);
-    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-  }
+// Visual-only meshes never take pointer events; each body has one hit sphere.
+const NO_RAYCAST = () => null;
 
-  float fbm(vec3 p) {
-    float value = 0.0;
-    float amplitude = 0.5;
-    float frequency = 1.0;
-    for (int i = 0; i < 5; i++) {
-      value += amplitude * snoise(p * frequency);
-      amplitude *= 0.5;
-      frequency *= 2.0;
+// Left-drag pans the map; a press that moved further than this is a drag,
+// not a click, so it must not open the planet under the pointer.
+const DRAG_CLICK_TOLERANCE_PX = 6;
+
+// Moon orbit radii (body radii) and Kepler-like speed constant (rad/s at r = 1).
+const MOON_ORBIT_MIN = 1.9;
+const MOON_ORBIT_MAX = 4.0;
+const MOON_SPEED_K = 0.9;
+
+interface MoonOrbit {
+  radius: number;
+  speed: number;
+  phase: number;
+  inclination: number;
+  node: number;
+  size: number;
+}
+
+// Corona quad edge length in star radii.
+const CORONA_SIZE = 3.6;
+
+// Bodies currently under the pointer. While > 0 the galaxy stops rotating so
+// planets and moons hold still while being aimed at (read by RotatingGalaxy).
+export const galaxyHover = { count: 0 };
+
+function setPointerCursor(active: boolean) {
+  document.body.style.cursor = active ? 'pointer' : '';
+}
+
+// Tracks one body's hover in galaxyHover without double counting.
+function useGalaxyHover(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    galaxyHover.count += 1;
+    return () => {
+      galaxyHover.count = Math.max(0, galaxyHover.count - 1);
+    };
+  }, [active]);
+}
+
+type RegisterMaterial = (slot: number) => (material: THREE.ShaderMaterial | null) => void;
+
+// Drives uTime / uHovered / uFade on every registered shader material, with
+// smoothed hover and modal-fade values.
+function useAnimatedMaterials(hovered: boolean, isModalOpen: boolean): RegisterMaterial {
+  const materials = useRef<(THREE.ShaderMaterial | null)[]>([]);
+  const state = useRef({ hover: 0, fade: 0 });
+
+  useFrame(({ clock }) => {
+    const s = state.current;
+    s.hover = THREE.MathUtils.lerp(s.hover, hovered ? 1 : 0, 0.1);
+    s.fade = THREE.MathUtils.lerp(s.fade, isModalOpen ? 1 : 0, 0.1);
+    const t = clock.elapsedTime;
+    for (const material of materials.current) {
+      if (!material) continue;
+      const u = material.uniforms;
+      if (u.uTime) u.uTime.value = t;
+      if (u.uHovered) u.uHovered.value = s.hover;
+      if (u.uFade) u.uFade.value = s.fade;
     }
-    return value;
-  }
-`;
+  });
 
-const SHARED_VERTEX = `
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-  varying vec2 vUv;
+  return (slot: number) => (material: THREE.ShaderMaterial | null) => {
+    materials.current[slot] = material;
+  };
+}
 
-  void main() {
-    vNormal = normalize(normalMatrix * normal);
-    vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
-// Planet shader - animated FBM noise + fresnel rim
-const PlanetShaderMaterial = shaderMaterial(
-  {
-    uTime: 0,
-    uColor: new THREE.Color('#7B3FF2'),
-    uHovered: 0,
-    uModalOpen: 0,
-  },
-  SHARED_VERTEX,
-  `
-    uniform float uTime;
-    uniform vec3 uColor;
-    uniform float uHovered;
-    uniform float uModalOpen;
-
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    varying vec2 vUv;
-
-    ${NOISE_GLSL}
-
-    void main() {
-      vec3 noiseCoord = vec3(vUv * 4.0, uTime * 0.004);
-      float noise = fbm(noiseCoord);
-      vec3 surfaceColor = uColor * (0.6 + noise * 0.5);
-
-      float bands = sin(vUv.y * 20.0 + noise * 3.0 + uTime * 0.003) * 0.1;
-      surfaceColor += bands;
-
-      vec3 viewDir = normalize(-vPosition);
-      float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 3.0);
-      surfaceColor += uColor * 2.0 * fresnel * (0.5 + uHovered * 0.5);
-      surfaceColor += uColor * uHovered * 0.3;
-
-      float alpha = mix(1.0, 0.1, uModalOpen);
-      gl_FragColor = vec4(surfaceColor, alpha);
-    }
-  `
-);
-
-extend({ PlanetShaderMaterial });
-
-// Star shader - hot plasma core, swirling energy, bright corona
-const StarShaderMaterial = shaderMaterial(
-  {
-    uTime: 0,
-    uColor: new THREE.Color('#7B3FF2'),
-    uHovered: 0,
-    uModalOpen: 0,
-  },
-  SHARED_VERTEX,
-  `
-    uniform float uTime;
-    uniform vec3 uColor;
-    uniform float uHovered;
-    uniform float uModalOpen;
-
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    varying vec2 vUv;
-
-    ${NOISE_GLSL}
-
-    void main() {
-      // Nearly static plasma — barely perceptible drift
-      float plasma1 = fbm(vec3(vUv * 3.0, uTime * 0.005));
-      float plasma2 = fbm(vec3(vUv * 5.0 + vec2(uTime * 0.004, -uTime * 0.003), uTime * 0.004));
-      float plasma = plasma1 * 0.6 + plasma2 * 0.4;
-
-      // Hot white core fading to color at edges
-      float distFromCenter = length(vUv - 0.5) * 2.0;
-      vec3 hotCore = vec3(1.0, 0.95, 0.88); // white-hot
-      vec3 midColor = uColor * 1.5;
-      vec3 edgeColor = uColor * 0.8;
-      vec3 surfaceColor = mix(hotCore, midColor, smoothstep(0.0, 0.6, distFromCenter));
-      surfaceColor = mix(surfaceColor, edgeColor, smoothstep(0.5, 1.0, distFromCenter));
-
-      // Plasma variation on surface
-      surfaceColor += plasma * 0.3 * uColor;
-      surfaceColor += plasma2 * 0.15;
-
-      // Ultra-slow solar flares
-      float flare = sin(vUv.x * 12.0 + uTime * 0.008) * sin(vUv.y * 8.0 - uTime * 0.006);
-      surfaceColor += flare * 0.03 * uColor;
-
-      // Intense fresnel corona
-      vec3 viewDir = normalize(-vPosition);
-      float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 2.5);
-      surfaceColor += uColor * fresnel * 2.0;
-      surfaceColor += vec3(1.0, 0.9, 0.8) * fresnel * 0.5;
-
-      // Hover energy surge
-      surfaceColor += uColor * uHovered * 0.4;
-      surfaceColor *= 1.3 + uHovered * 0.3;
-
-      float alpha = mix(1.0, 0.1, uModalOpen);
-      gl_FragColor = vec4(surfaceColor, alpha);
-    }
-  `
-);
-
-extend({ StarShaderMaterial });
-
-// Atmosphere glow shader - pure fresnel
-const AtmosphereShaderMaterial = shaderMaterial(
-  { uColor: new THREE.Color('#7B3FF2'), uIntensity: 1.0 },
-  `
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    void main() {
-      vNormal = normalize(normalMatrix * normal);
-      vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  `
-    uniform vec3 uColor;
-    uniform float uIntensity;
-    varying vec3 vNormal;
-    varying vec3 vPosition;
-    void main() {
-      vec3 viewDir = normalize(-vPosition);
-      float fresnel = pow(1.0 - max(dot(viewDir, vNormal), 0.0), 4.0);
-      gl_FragColor = vec4(uColor * 1.5, fresnel * uIntensity);
-    }
-  `
-);
-
-extend({ AtmosphereShaderMaterial });
-
-// Type declarations for JSX
-declare module '@react-three/fiber' {
-  interface ThreeElements {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    planetShaderMaterial: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    starShaderMaterial: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    atmosphereShaderMaterial: any;
-  }
+// Dark / mid / light rocky tones derived from a single accent color.
+function rockyPalette(color: string): [THREE.Color, THREE.Color, THREE.Color] {
+  const base = new THREE.Color(color);
+  const gray = new THREE.Color('#6b6670');
+  return [
+    gray.clone().lerp(base, 0.25).multiplyScalar(0.45),
+    gray.clone().lerp(base, 0.45),
+    gray.clone().lerp(base, 0.35).lerp(new THREE.Color('#ffffff'), 0.45),
+  ];
 }
 
 interface SectionProps {
   name: string;
+  // Short descriptor shown above the name, and the section's order number.
+  kicker: string;
+  index: number;
   position: [number, number, number];
   color: string;
   scale: number;
   id: string;
-  Component?: React.ComponentType<object>;
-  gradient: string;
+  look: PlanetLook;
   subSections?: SubSection[];
-  onSectionClick: (section: SectionType) => void;
+  // Opens a section; subIndex selects a sub-section tab (moons).
+  onSectionClick: (id: string, subIndex?: number) => void;
   isModalOpen: boolean;
 }
 
-const SectionComponent = forwardRef<THREE.Mesh, SectionProps>(
-  ({
-    name,
-    position,
-    color,
-    scale,
-    id,
-    Component,
-    subSections,
-    onSectionClick,
-    isModalOpen,
-    gradient,
-  }, ref) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const shaderRef = useRef<THREE.ShaderMaterial & { uTime: number; uHovered: number; uModalOpen: number }>(null);
-    const ringRef = useRef<THREE.Mesh>(null);
-    const [hovered, setHovered] = useState(false);
-    const isCenter = id === 'home';
-    const hasRing = id === 'studies';
-    const hasSubMoons = subSections && subSections.length > 0;
-    const fontSize = isCenter ? 'text-2xl' : 'text-lg';
+export default function Section({
+  name,
+  kicker,
+  index,
+  position,
+  color,
+  scale,
+  id,
+  look,
+  subSections,
+  onSectionClick,
+  isModalOpen,
+}: SectionProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const spinRef = useRef<THREE.Group>(null);
+  const cloudRef = useRef<THREE.Mesh>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
+  const leaderRef = useRef<HTMLSpanElement>(null);
+  const camera = useThree((st) => st.camera);
+  const viewportHeight = useThree((st) => st.size.height);
+  const labelTmp = useMemo(
+    () => ({ center: new THREE.Vector3(), edge: new THREE.Vector3(), up: new THREE.Vector3() }),
+    []
+  );
+  const [hovered, setHovered] = useState(false);
+  // Index of the moon under the pointer (one at a time), or null.
+  const [hoveredMoon, setHoveredMoon] = useState<number | null>(null);
+  const register = useAnimatedMaterials(hovered, isModalOpen);
+  useGalaxyHover(hovered || hoveredMoon !== null);
 
-    const threeColor = useMemo(() => new THREE.Color(color), [color]);
-
-    useFrame((state) => {
-      if (meshRef.current) {
-        meshRef.current.rotation.y += isCenter ? 0.003 : 0.002;
-        if (hovered) meshRef.current.rotation.y += 0.005;
-      }
-      if (shaderRef.current) {
-        shaderRef.current.uTime = state.clock.elapsedTime;
-        shaderRef.current.uHovered = THREE.MathUtils.lerp(
-          shaderRef.current.uHovered, hovered ? 1 : 0, 0.1
-        );
-        shaderRef.current.uModalOpen = THREE.MathUtils.lerp(
-          shaderRef.current.uModalOpen, isModalOpen ? 1 : 0, 0.1
-        );
-      }
-      if (ringRef.current) {
-        ringRef.current.rotation.z += 0.001;
-      }
+  const isStar = look.kind === 'star';
+  const hasSubMoons = !!subSections && subSections.length > 0;
+  // Moon orbits in body radii: spread between MOON_ORBIT_MIN and MAX, each
+  // with its own inclination, node and starting angle.
+  const moonOrbits = useMemo<MoonOrbit[]>(() => {
+    const count = subSections?.length ?? 0;
+    return Array.from({ length: count }, (_, i) => {
+      const radius = count > 1
+        ? MOON_ORBIT_MIN + ((MOON_ORBIT_MAX - MOON_ORBIT_MIN) * i) / (count - 1)
+        : (MOON_ORBIT_MIN + MOON_ORBIT_MAX) / 2;
+      return {
+        radius,
+        speed: MOON_SPEED_K / Math.pow(radius, 1.5),
+        phase: (i * Math.PI * 2 * 0.618) % (Math.PI * 2),
+        // Nearly coplanar: the orbits read as clean concentric ellipses.
+        inclination: 0.5 + Math.sin(i * 2.3 + 0.7) * 0.06,
+        node: 0.35,
+        size: count > 6 ? 0.19 : 0.28,
+      };
     });
+  }, [subSections?.length]);
 
-    return (
-      <group position={position}>
-        {/* Main sphere */}
-        <mesh
-          ref={(node) => {
-            meshRef.current = node;
-            if (typeof ref === 'function') ref(node);
-            else if (ref) (ref as React.MutableRefObject<THREE.Mesh | null>).current = node;
-          }}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          onClick={() => onSectionClick({ name, position, color, scale, id, Component, gradient })}
-          scale={hovered ? scale * 1.12 : scale}
-        >
-          <sphereGeometry args={[1, 64, 64]} />
-          {isCenter ? (
-            <starShaderMaterial
-              ref={shaderRef}
-              uTime={0}
-              uColor={threeColor}
-              uHovered={0}
-              uModalOpen={0}
-              transparent
-            />
-          ) : (
-            <planetShaderMaterial
-              ref={shaderRef}
-              uTime={0}
-              uColor={threeColor}
-              uHovered={0}
-              uModalOpen={0}
-              transparent
-            />
+  // How far below the body center the label sits, in body radii: clear of
+  // tilted rings and orbiting moons.
+  const labelClearance = hasSubMoons ? MOON_ORBIT_MAX + 0.55 : look.rings ? 1.45 : isStar ? 1.08 : 1.18;
+
+  const accent = useMemo(() => new THREE.Color(color), [color]);
+  const rim = useMemo(() => new THREE.Color(look.rim), [look.rim]);
+  const palette = useMemo(
+    () => look.palette.map((c) => new THREE.Color(c)) as [THREE.Color, THREE.Color, THREE.Color],
+    [look.palette]
+  );
+  const ringColors = useMemo(
+    () => (look.rings ? [new THREE.Color(look.rings.colorA), new THREE.Color(look.rings.colorB)] : null),
+    [look.rings]
+  );
+
+  useEffect(() => () => setPointerCursor(false), []);
+
+  // Opening a section unmounts the moons without a pointerout; clear hover so
+  // the system and the galaxy do not stay paused after the modal closes.
+  useEffect(() => {
+    if (!isModalOpen) return;
+    setHovered(false);
+    setHoveredMoon(null);
+    setPointerCursor(false);
+  }, [isModalOpen]);
+
+  useFrame((_, delta) => {
+    if (spinRef.current) {
+      spinRef.current.rotation.y += delta * (isStar ? 0.04 : 0.1) * (hovered ? 2.5 : 1);
+    }
+    if (cloudRef.current) {
+      cloudRef.current.rotation.y += delta * 0.035;
+    }
+    // Keep the label just below the body on screen, whatever the zoom,
+    // rotation or tilt: project the body radius along the camera's up axis.
+    const group = groupRef.current;
+    const label = labelRef.current;
+    if (group && label) {
+      group.getWorldPosition(labelTmp.center);
+      labelTmp.up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      // Pixels per world unit at the body, along the camera's up axis.
+      labelTmp.edge.copy(labelTmp.center).addScaledVector(labelTmp.up, 1);
+      labelTmp.center.project(camera);
+      labelTmp.edge.project(camera);
+      const pxPerUnit = Math.abs(labelTmp.edge.y - labelTmp.center.y) * 0.5 * viewportHeight;
+      const grow = hovered ? 1.06 : 1;
+      const bodyPx = pxPerUnit * scale * grow;
+      const clearPx = pxPerUnit * scale * labelClearance * grow;
+      // The tag starts at the body edge; its leader line reaches down to the
+      // card, which sits below rings and moon orbits.
+      label.style.transform = `translate3d(0, ${(bodyPx + 3).toFixed(1)}px, 0)`;
+      if (leaderRef.current) {
+        leaderRef.current.style.height = `${Math.max(10, clearPx - bodyPx).toFixed(1)}px`;
+      }
+    }
+  });
+
+  const open = () => onSectionClick(id);
+
+  return (
+    <group ref={groupRef} position={position}>
+      <group scale={hovered ? scale * 1.06 : scale}>
+        <group rotation={[look.tilt[0], 0, look.tilt[1]]}>
+          <group ref={spinRef}>
+            <mesh raycast={NO_RAYCAST}>
+              <sphereGeometry args={[1, 96, 96]} />
+              {isStar ? (
+                <starSurfaceMaterial ref={register(0)} uColor={accent} transparent />
+              ) : (
+                <planetSurfaceMaterial
+                  ref={register(0)}
+                  uKind={KIND_INDEX[look.kind as keyof typeof KIND_INDEX]}
+                  uSeed={look.seed}
+                  uColorA={palette[0]}
+                  uColorB={palette[1]}
+                  uColorC={palette[2]}
+                  uRim={rim}
+                  transparent
+                />
+              )}
+            </mesh>
+          </group>
+
+          {look.clouds && (
+            <mesh ref={cloudRef} scale={1.018} raycast={NO_RAYCAST} renderOrder={1}>
+              <sphereGeometry args={[1, 64, 64]} />
+              <planetCloudMaterial ref={register(1)} uSeed={look.seed} transparent depthWrite={false} />
+            </mesh>
           )}
-        </mesh>
 
-        {/* Ring */}
-        {hasRing && (
-          <mesh ref={ringRef} scale={scale} rotation={[0, 0, 0]}>
-            <ringGeometry args={[1.4, 2.2, 80]} />
-            <meshBasicMaterial
-              color={color}
+          {look.rings && ringColors && (
+            // Equatorial plane of the tilted planet.
+            <mesh rotation={[-Math.PI / 2, 0, 0]} raycast={NO_RAYCAST} renderOrder={2}>
+              <ringGeometry args={[look.rings.inner, look.rings.outer, 192, 1]} />
+              <planetRingMaterial
+                ref={register(2)}
+                uColorA={ringColors[0]}
+                uColorB={ringColors[1]}
+                uInner={look.rings.inner}
+                uOuter={look.rings.outer}
+                uSeed={look.seed}
+                transparent
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          )}
+        </group>
+
+        {look.atmosphere !== undefined && (
+          <mesh scale={1.14} raycast={NO_RAYCAST} renderOrder={3}>
+            <sphereGeometry args={[1, 64, 64]} />
+            <planetAtmosphereMaterial
+              ref={register(3)}
+              uColor={rim}
+              uIntensity={look.atmosphere}
               transparent
-              opacity={isModalOpen ? 0.02 : 0.12}
-              side={THREE.DoubleSide}
               depthWrite={false}
               blending={THREE.AdditiveBlending}
+              side={THREE.BackSide}
             />
           </mesh>
         )}
 
-        {/* Decorative orbiting moons for home planet */}
-        {isCenter && !isModalOpen && (
-          <>
-            <OrbitingMoon color="#a78bfa" parentScale={scale} speed={0.5} distance={3.5} size={0.2} />
-            <OrbitingMoon color="#64ffda" parentScale={scale} speed={0.3} distance={4.5} size={0.12} />
-            <OrbitingMoon color="#ff79c6" parentScale={scale} speed={0.2} distance={5.5} size={0.08} />
-          </>
+        {isStar && (
+          <Billboard>
+            <mesh raycast={NO_RAYCAST} renderOrder={3}>
+              <planeGeometry args={[CORONA_SIZE, CORONA_SIZE]} />
+              <starCoronaMaterial
+                ref={register(4)}
+                uColor={accent}
+                uStarFraction={2 / CORONA_SIZE}
+                transparent
+                depthWrite={false}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          </Billboard>
         )}
 
-        {/* Clickable sub-section moons */}
-        {hasSubMoons && !isModalOpen && subSections.map((sub, i) => {
-          const moonCount = subSections.length;
-          const orbitRadius = moonCount > 6 ? 1.6 : moonCount > 4 ? 1.5 : 1.6;
-          const moonSize = moonCount > 6 ? 0.25 : moonCount > 4 ? 0.3 : 0.4;
-          return (
-          <ClickableMoon
-            key={sub.name}
-            name={sub.name}
-            color={sub.color}
-            parentScale={scale}
-            speed={0.04}
-            distance={orbitRadius}
-            size={moonSize}
-            offset={i * ((Math.PI * 2) / moonCount)}
-            onClick={() => onSectionClick({
-              name: sub.name,
-              position,
-              color: sub.color,
-              scale,
-              id: `${id}-${sub.name.toLowerCase()}`,
-              Component: sub.Component,
-              gradient: sub.gradient,
-            })}
-          />
-          );
-        })}
-
-        {!isModalOpen && (
-          <Html center distanceFactor={12}>
-            <div
-              className={`cursor-pointer font-bold ${fontSize} text-center select-none whitespace-nowrap`}
-              style={{
-                color: '#ffffff',
-                textShadow: `0 0 20px ${color}, 0 0 40px ${color}80, 0 0 60px ${color}40, 0 0 6px rgba(255,255,255,0.8)`,
-                transform: `scale(${hovered ? 1.2 : 1})`,
-                transition: 'all 0.3s ease-out',
-                letterSpacing: '0.15em',
-                fontWeight: 800,
-              }}
-              onClick={() => {
-                if (!hasSubMoons) {
-                  onSectionClick({ name, position, color, scale, id, Component, gradient });
-                }
-              }}
-            >
-              {name}
-            </div>
-          </Html>
-        )}
+        {/* Invisible hit sphere: a bit larger than the body so small planets
+            are easy to hover and tap. */}
+        <mesh
+          scale={isStar ? 1.02 : 1.3}
+          onPointerOver={(e: ThreeEvent<PointerEvent>) => {
+            e.stopPropagation();
+            setHovered(true);
+            setPointerCursor(true);
+          }}
+          onPointerOut={() => {
+            setHovered(false);
+            setPointerCursor(false);
+          }}
+          onClick={(e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation();
+            if (e.delta > DRAG_CLICK_TOLERANCE_PX) return;
+            open();
+          }}
+        >
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+        </mesh>
       </group>
-    );
-  }
-);
+
+      {/* Decorative moons around the central star */}
+      {isStar && !isModalOpen && (
+        <>
+          <OrbitingMoon color="#a78bfa" parentScale={scale} speed={0.5} distance={3.5} size={0.2} />
+          <OrbitingMoon color="#64ffda" parentScale={scale} speed={0.3} distance={4.5} size={0.12} />
+          <OrbitingMoon color="#ff79c6" parentScale={scale} speed={0.2} distance={5.5} size={0.08} />
+        </>
+      )}
+
+      {/* Clickable sub-section moons, each on its own inclined orbit around
+          this planet; inner moons orbit faster (Kepler-like). */}
+      {hasSubMoons && !isModalOpen && moonOrbits.map((orbit, i) => (
+        <ClickableMoon
+          key={subSections[i].name}
+          name={subSections[i].name}
+          color={subSections[i].color}
+          parentScale={scale}
+          orbit={orbit}
+          seed={i * 1.7 + 0.5}
+          isModalOpen={isModalOpen}
+          index={i}
+          hovered={hoveredMoon === i}
+          systemActive={hovered || hoveredMoon !== null}
+          onHoverIndex={(next) => setHoveredMoon((cur) => (next === null && cur !== i ? cur : next))}
+          onClick={() => onSectionClick(id, i)}
+        />
+      ))}
+
+      {!isModalOpen && (
+        // HUD tag under the body. Fixed pixel size (distance scaling made the
+        // old labels 7-8px tall); its offset is set in screen pixels each frame.
+        // aria-hidden: keyboard and screen readers use the SectionNav instead.
+        // pointer-events none on the wrapper: its box spans the leader line
+        // over the moons and would swallow the canvas hover / click there.
+        <Html center aria-hidden="true" zIndexRange={LABEL_Z_RANGE} style={{ pointerEvents: 'none' }}>
+          <div ref={labelRef} className="will-change-transform">
+            {/* Only the card takes the pointer: the leader line area must not
+                block clicks on moons behind it. */}
+            <div className="pointer-events-none flex translate-y-1/2 select-none flex-col items-center">
+              <span
+                ref={leaderRef}
+                className="pointer-events-none block w-px"
+                style={{ height: 12, background: `linear-gradient(to bottom, ${color}10, ${color})` }}
+              />
+              <span
+                role="presentation"
+                onClick={open}
+                onPointerEnter={() => setHovered(true)}
+                onPointerLeave={() => setHovered(false)}
+                className="pointer-events-auto flex cursor-pointer flex-col items-center whitespace-nowrap rounded-md border px-2 py-0.5 backdrop-blur-[3px] transition-colors duration-300 sm:px-2.5 sm:py-1"
+                style={{
+                  borderColor: hovered ? `${color}cc` : `${color}40`,
+                  background: hovered ? 'rgba(8, 6, 20, 0.72)' : 'rgba(8, 6, 20, 0.5)',
+                  boxShadow: hovered ? `0 0 18px ${color}55` : `0 0 10px ${color}1f`,
+                }}
+              >
+                <span
+                  className="hidden font-mono text-[9px] uppercase tracking-[0.28em] sm:block"
+                  style={{ color }}
+                >
+                  {String(index).padStart(2, '0')} / {kicker}
+                </span>
+                <span
+                  className={`font-semibold leading-tight text-white ${isStar ? 'text-[13px] sm:text-lg tracking-[0.12em]' : 'text-[11px] sm:text-[15px] tracking-[0.04em]'}`}
+                >
+                  {name}
+                </span>
+              </span>
+            </div>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+function RockyMoonMaterial({ color, seed, slot, register }: {
+  color: string;
+  seed: number;
+  slot: number;
+  register: RegisterMaterial;
+}) {
+  const palette = useMemo(() => rockyPalette(color), [color]);
+  const rim = useMemo(() => new THREE.Color(color), [color]);
+  return (
+    <planetSurfaceMaterial
+      ref={register(slot)}
+      uKind={KIND_INDEX.rocky}
+      uSeed={seed}
+      uColorA={palette[0]}
+      uColorB={palette[1]}
+      uColorC={palette[2]}
+      uRim={rim}
+      transparent
+    />
+  );
+}
 
 function OrbitingMoon({ color, parentScale, speed, distance, size }: {
   color: string; parentScale: number; speed: number; distance: number; size: number;
 }) {
   const moonRef = useRef<THREE.Group>(null);
+  const register = useAnimatedMaterials(false, false);
 
   useFrame((state) => {
     if (moonRef.current) {
@@ -412,86 +439,146 @@ function OrbitingMoon({ color, parentScale, speed, distance, size }: {
 
   return (
     <group ref={moonRef}>
-      <mesh scale={size}>
-        <sphereGeometry args={[1, 16, 16]} />
-        <meshStandardMaterial
-          color="#aaaaaa"
-          emissive={color}
-          emissiveIntensity={0.5}
-          roughness={0.7}
-        />
-      </mesh>
-      <mesh scale={size * 1.5}>
-        <sphereGeometry args={[1, 8, 8]} />
-        <meshBasicMaterial
-          color={color}
-          transparent
-          opacity={0.15}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
+      <mesh scale={size} raycast={NO_RAYCAST}>
+        <sphereGeometry args={[1, 32, 32]} />
+        <RockyMoonMaterial color={color} seed={distance} slot={0} register={register} />
       </mesh>
     </group>
   );
 }
 
-function ClickableMoon({ name, color, parentScale, speed, distance, size, offset, onClick }: {
-  name: string; color: string; parentScale: number; speed: number;
-  distance: number; size: number; offset: number; onClick: () => void;
+// Hit spheres of neighbouring moons can overlap; three.js would pick the one
+// nearest in depth. Resolve to the moon whose center is closest to the
+// pointer ray instead, so the moon under the cursor is the one that opens.
+function closestMoonHit(e: ThreeEvent<MouseEvent | PointerEvent>) {
+  const center = new THREE.Vector3();
+  let best: THREE.Object3D | null = null;
+  let bestDistance = Infinity;
+  for (const hit of e.intersections) {
+    if (!hit.object.userData.moonPick) continue;
+    hit.object.getWorldPosition(center);
+    const d = e.ray.distanceSqToPoint(center);
+    if (d < bestDistance) {
+      bestDistance = d;
+      best = hit.object;
+    }
+  }
+  return best;
+}
+
+// Minimum on-screen radius of a moon's hit area, in CSS pixels.
+const MOON_MIN_HIT_PX = 18;
+
+function ClickableMoon({ name, color, parentScale, orbit, seed, isModalOpen, index, hovered, systemActive, onHoverIndex, onClick }: {
+  name: string; color: string; parentScale: number; orbit: MoonOrbit; seed: number;
+  isModalOpen: boolean;
+  index: number;
+  hovered: boolean;
+  // True while the pointer is on this planet or any of its moons.
+  systemActive: boolean;
+  // Reports which moon is under the pointer; null when leaving this one.
+  onHoverIndex: (index: number | null) => void;
+  onClick: () => void;
 }) {
   const moonRef = useRef<THREE.Group>(null);
-  const [hovered, setHovered] = useState(false);
+  const hitRef = useRef<THREE.Mesh>(null);
+  const register = useAnimatedMaterials(hovered, isModalOpen);
+  const camera = useThree((st) => st.camera);
+  const viewportHeight = useThree((st) => st.size.height);
+  const size = orbit.size;
+  const r = orbit.radius * parentScale;
+  const angle = useRef(orbit.phase);
+  const tmp = useMemo(() => new THREE.Vector3(), []);
 
-  useFrame((state) => {
+
+  useFrame((_, delta) => {
+    // The whole system nearly stops while the pointer is on it, so moons are
+    // easy to aim at.
+    angle.current += delta * orbit.speed * (systemActive ? 0.08 : 1);
     if (moonRef.current) {
-      const t = state.clock.elapsedTime * speed + offset;
-      moonRef.current.position.x = Math.cos(t) * distance * parentScale;
-      moonRef.current.position.y = Math.sin(t) * distance * parentScale;
-      moonRef.current.position.z = Math.sin(t * 0.5) * 0.2;
+      moonRef.current.position.set(Math.cos(angle.current) * r, Math.sin(angle.current) * r, 0);
+    }
+    // Keep the hit area at least MOON_MIN_HIT_PX on screen at any zoom.
+    if (hitRef.current && moonRef.current) {
+      moonRef.current.getWorldPosition(tmp);
+      const dist = camera.position.distanceTo(tmp);
+      const fov = (camera as THREE.PerspectiveCamera).fov ?? 50;
+      const worldPerPx = (2 * dist * Math.tan(THREE.MathUtils.degToRad(fov / 2))) / viewportHeight;
+      hitRef.current.scale.setScalar(Math.max(size * 1.8, MOON_MIN_HIT_PX * worldPerPx));
     }
   });
 
   return (
-    <group ref={moonRef}>
-      <mesh
-        scale={hovered ? size * 1.3 : size}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        onClick={(e) => { e.stopPropagation(); onClick(); }}
-      >
-        <sphereGeometry args={[1, 24, 24]} />
-        <meshBasicMaterial color={color} />
-      </mesh>
-      <mesh scale={size * 1.8}>
-        <sphereGeometry args={[1, 8, 8]} />
+    <group rotation={[orbit.inclination, 0, orbit.node]}>
+      {/* Faint orbit path */}
+      <mesh raycast={NO_RAYCAST}>
+        <ringGeometry args={[r - 0.015, r + 0.015, 128]} />
         <meshBasicMaterial
           color={color}
           transparent
-          opacity={hovered ? 0.25 : 0.1}
+          opacity={hovered ? 0.4 : systemActive ? 0.18 : 0.1}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
+          side={THREE.DoubleSide}
         />
       </mesh>
-      <Html center distanceFactor={10}>
-        <div
-          className="cursor-pointer text-xs font-bold text-center select-none whitespace-nowrap"
-          style={{
-            color: '#ffffff',
-            textShadow: `0 0 10px ${color}, 0 0 20px ${color}80`,
-            transform: `scale(${hovered ? 1.2 : 1})`,
-            transition: 'all 0.3s ease-out',
-            letterSpacing: '0.1em',
-            opacity: hovered ? 1 : 0.7,
+      <group ref={moonRef}>
+        <mesh scale={hovered ? size * 1.3 : size} raycast={NO_RAYCAST}>
+          <sphereGeometry args={[1, 32, 32]} />
+          <RockyMoonMaterial color={color} seed={seed} slot={0} register={register} />
+        </mesh>
+        {/* Soft halo keeps tiny moons visible against the dark sky */}
+        <mesh scale={size * 1.9} raycast={NO_RAYCAST}>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={hovered ? 0.3 : 0.08}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+        <mesh
+          ref={hitRef}
+          userData={{ moonPick: true, open: onClick, index }}
+          onPointerMove={(e: ThreeEvent<PointerEvent>) => {
+            e.stopPropagation();
+            const target = closestMoonHit(e);
+            onHoverIndex(target ? (target.userData.index as number) : index);
+            setPointerCursor(true);
           }}
-          onClick={onClick}
+          onPointerOut={() => {
+            onHoverIndex(null);
+            setPointerCursor(false);
+          }}
+          onClick={(e: ThreeEvent<MouseEvent>) => {
+            e.stopPropagation();
+            if (e.delta > DRAG_CLICK_TOLERANCE_PX) return;
+            const target = closestMoonHit(e);
+            (target?.userData.open ?? onClick)();
+          }}
         >
-          {name}
-        </div>
-      </Html>
+          <sphereGeometry args={[1, 12, 12]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} />
+        </mesh>
+        {/* Names show for the whole system while it is being aimed at, so it
+            is clear which moon is which before clicking. */}
+        {(systemActive || hovered) && (
+          <Html center aria-hidden="true" zIndexRange={LABEL_Z_RANGE} style={{ pointerEvents: 'none' }}>
+            <div
+              className="-translate-y-5 select-none whitespace-nowrap rounded px-1.5 py-0.5 text-center text-[11px] font-semibold"
+              style={{
+                color: '#ffffff',
+                background: hovered ? `${color}40` : 'rgba(8, 6, 20, 0.55)',
+                border: `1px solid ${hovered ? color : `${color}40`}`,
+                textShadow: '0 0 4px rgba(0,0,0,0.9)',
+              }}
+            >
+              {name}
+            </div>
+          </Html>
+        )}
+      </group>
     </group>
   );
 }
-
-SectionComponent.displayName = 'Section';
-
-export default SectionComponent;

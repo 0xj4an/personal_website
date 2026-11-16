@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { upcomingEvents, type UpcomingEvent } from '@/data/upcomingEvents'
+import { upcomingEvents, type EventKind, type UpcomingEvent } from '@/data/upcomingEvents'
+import SectionHeader from './SectionHeader'
 
+const ACCENT = '#4ade80'
 const DAY_MS = 24 * 60 * 60 * 1000
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const MONTHS_LONG = [
@@ -41,103 +43,118 @@ function sortByStart(a: UpcomingEvent, b: UpcomingEvent) {
 function eventDaysInMonth(event: UpcomingEvent, year: number, month: number) {
   const days = new Set<number>()
   if (!event.start || !event.end || event.monthOnly) return days
-  const start = parseDate(event.start)
+  // Step by calendar day (not 24h) so DST changes never skip or repeat a day.
+  const cursor = parseDate(event.start)
   const end = parseDate(event.end)
-  for (let t = start.getTime(); t <= end.getTime(); t += DAY_MS) {
-    const d = new Date(t)
-    if (d.getFullYear() === year && d.getMonth() === month) days.add(d.getDate())
+  while (cursor <= end) {
+    if (cursor.getFullYear() === year && cursor.getMonth() === month) days.add(cursor.getDate())
+    cursor.setDate(cursor.getDate() + 1)
   }
   return days
 }
 
-function monthAnchor(key: number) {
-  const { year, month } = keyToYearMonth(key)
-  return `events-${year}-${month + 1}`
+function matchesQuery(event: UpcomingEvent, query: string) {
+  if (!query) return true
+  return [event.name, event.location, event.description, event.kind, event.dateLabel]
+    .join(' ')
+    .toLowerCase()
+    .includes(query)
 }
 
-function scrollToMonth(key: number) {
-  document.getElementById(monthAnchor(key))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+// ---------------------------------------------------------------------------
+// Pieces
+// ---------------------------------------------------------------------------
+
+function DateBlock({ event }: { event: UpcomingEvent }) {
+  let top = 'TBA'
+  let bottom = ''
+  if (event.start) {
+    const start = parseDate(event.start)
+    const end = event.end ? parseDate(event.end) : start
+    top = MONTHS[start.getMonth()]
+    if (event.monthOnly) {
+      // Only the month is known; a year here would read as a day ("NOV 26").
+      bottom = 'TBA'
+    } else if (start.getTime() === end.getTime()) {
+      bottom = String(start.getDate())
+    } else if (start.getMonth() === end.getMonth()) {
+      bottom = `${start.getDate()}-${end.getDate()}`
+    } else {
+      bottom = `${start.getDate()}+`
+    }
+  }
+  return (
+    <div
+      className="flex w-14 shrink-0 flex-col items-center justify-center rounded-lg border py-2"
+      style={{ borderColor: `${ACCENT}33`, background: `${ACCENT}0d` }}
+    >
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+        {top}
+      </span>
+      {bottom && <span className="mt-0.5 text-base font-semibold leading-none text-white">{bottom}</span>}
+    </div>
+  )
 }
 
-function Badges({ event, now }: { event: UpcomingEvent; now: number }) {
+function EventRow({ event, now }: { event: UpcomingEvent; now: number }) {
   const deadlineSoon =
     event.deadline !== undefined &&
     endOfDay(event.deadline) >= now &&
     endOfDay(event.deadline) - now <= 30 * DAY_MS
   return (
-    <>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-white/15 px-2 py-0.5 text-xs text-gray-300">
-          {event.kind}
-        </span>
-        {event.featured && (
-          <span className="rounded-full bg-amber-300/15 px-2 py-0.5 text-xs text-amber-200">
-            Major event
-          </span>
-        )}
-        {event.applicationsOpen && (
-          <span className="rounded-full bg-green-400/15 px-2 py-0.5 text-xs text-green-300">
-            Applications open
-          </span>
-        )}
-      </div>
-      {event.deadlineLabel && (
-        <p className={`mt-2 text-sm ${deadlineSoon ? 'font-semibold text-amber-300' : 'text-gray-400'}`}>
-          {event.deadlineLabel}
-        </p>
-      )}
-    </>
-  )
-}
-
-function Links({ event }: { event: UpcomingEvent }) {
-  return (
-    <div className="mt-3 flex flex-wrap gap-2">
-      {event.links.map((link) => (
-        <a
-          key={link.url}
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={
-            link.primary
-              ? 'rounded-md bg-green-500/20 px-3 py-1 text-sm text-green-200 transition-colors hover:bg-green-500/30'
-              : 'px-1 py-1 text-sm text-blue-400 hover:underline'
-          }
-        >
-          {link.label}
-        </a>
-      ))}
-    </div>
-  )
-}
-
-function EventCard({ event, now }: { event: UpcomingEvent; now: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className={`rounded-lg border p-4 ${event.featured ? 'border-amber-300/30 bg-amber-300/5' : 'border-white/10 bg-white/[0.02]'}`}
+    <motion.article
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex gap-4 rounded-xl border p-4 transition-colors hover:border-white/20"
+      style={{
+        borderColor: event.featured ? 'rgba(252, 211, 77, 0.3)' : 'rgba(255,255,255,0.08)',
+        background: event.featured ? 'rgba(252, 211, 77, 0.04)' : 'rgba(255,255,255,0.02)',
+      }}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-        <h4 className="text-lg font-semibold text-white">{event.name}</h4>
-        <span className="text-sm text-gray-400">{event.dateLabel}</span>
+      <DateBlock event={event} />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <h4 className="font-semibold text-white">{event.name}</h4>
+          {event.featured && (
+            <span className="rounded-full bg-amber-300/15 px-2 py-0.5 text-[11px] text-amber-200">Major</span>
+          )}
+          {event.applicationsOpen && (
+            <span className="rounded-full bg-green-400/15 px-2 py-0.5 text-[11px] text-green-300">Applications open</span>
+          )}
+        </div>
+        <p className="mt-0.5 text-xs text-gray-500">
+          {event.kind} | {event.location} | {event.dateLabel}
+        </p>
+        {event.deadlineLabel && (
+          <p className={`mt-1.5 text-xs ${deadlineSoon ? 'font-semibold text-amber-300' : 'text-gray-400'}`}>
+            {event.deadlineLabel}
+          </p>
+        )}
+        <p className="mt-2 text-sm leading-relaxed text-gray-300">{event.description}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {event.links.map((link) => (
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={
+                link.primary
+                  ? 'rounded-md bg-green-500/20 px-3 py-1 text-xs font-medium text-green-200 transition-colors hover:bg-green-500/30'
+                  : 'rounded-md border border-white/10 px-3 py-1 text-xs text-gray-300 transition-colors hover:border-white/25 hover:text-white'
+              }
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
       </div>
-      <p className="mb-2 text-sm text-gray-500">{event.location}</p>
-      <Badges event={event} now={now} />
-      <p className="mt-2 text-sm text-gray-300">{event.description}</p>
-      <Links event={event} />
-    </motion.div>
+    </motion.article>
   )
 }
 
-function MonthGrid({
-  year,
-  month,
-  events,
-  today,
-}: {
+function MonthGrid({ year, month, events, today }: {
   year: number
   month: number
   events: UpcomingEvent[]
@@ -177,10 +194,7 @@ function MonthGrid({
             ? 'bg-green-400/30 text-green-100 font-semibold'
             : 'text-gray-500'
         return (
-          <div
-            key={day}
-            className={`rounded py-1 ${cls} ${isToday ? 'ring-1 ring-white/70' : ''}`}
-          >
+          <div key={day} className={`rounded py-1 ${cls} ${isToday ? 'ring-1 ring-white/70' : ''}`}>
             {day}
           </div>
         )
@@ -189,27 +203,63 @@ function MonthGrid({
   )
 }
 
+function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className="rounded-full border px-3 py-1 text-xs transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+      style={
+        active
+          ? { borderColor: ACCENT, background: `${ACCENT}22`, color: '#ffffff' }
+          : { borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.65)' }
+      }
+    >
+      {children}
+    </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
 export default function UpcomingEvents() {
   // Dates depend on the viewer's clock, so render only after mount to avoid hydration mismatches.
   const [nowDate, setNowDate] = useState<Date | null>(null)
+  const [query, setQuery] = useState('')
+  const [kinds, setKinds] = useState<EventKind[]>([])
+  const [openOnly, setOpenOnly] = useState(false)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
   useEffect(() => setNowDate(new Date()), [])
+
+  const allKinds = useMemo(
+    () => Array.from(new Set(upcomingEvents.map((e) => e.kind))),
+    []
+  )
+
   if (!nowDate) {
-    return <section className="bg-black py-6 text-gray-400">Loading events...</section>
+    return <p className="py-6 text-sm text-gray-400">Loading events...</p>
   }
 
   const now = nowDate.getTime()
   const currentKey = monthKey(nowDate)
+  const q = query.trim().toLowerCase()
 
   const active = upcomingEvents.filter((e) => isUpcoming(e, now))
-  const featured = active.filter((e) => e.featured).sort(sortByStart)
-  const dated = active.filter((e) => e.start).sort(sortByStart)
-  const rolling = active.filter((e) => !e.start)
+  const filtered = active
+    .filter((e) => matchesQuery(e, q))
+    .filter((e) => kinds.length === 0 || kinds.includes(e.kind))
+    .filter((e) => !openOnly || e.applicationsOpen)
+  const dated = filtered.filter((e) => e.start).sort(sortByStart)
+  const rolling = filtered.filter((e) => !e.start)
+  const hasFilters = q !== '' || kinds.length > 0 || openOnly
 
   // Each dated event is listed once, in its start month (or the current month if already running).
   const byMonth = new Map<number, UpcomingEvent[]>()
-  // Every month an event touches, so grids can highlight spans across months.
+  // Every month an event touches, so calendar grids can highlight spans across months.
   const touching = new Map<number, UpcomingEvent[]>()
-  let lastKey = currentKey
   for (const event of dated) {
     const startKey = Math.max(monthKey(parseDate(event.start!)), currentKey)
     const endKey = monthKey(parseDate(event.end ?? event.start!))
@@ -217,125 +267,163 @@ export default function UpcomingEvents() {
     for (let k = startKey; k <= endKey; k++) {
       touching.set(k, [...(touching.get(k) ?? []), event])
     }
-    lastKey = Math.max(lastKey, endKey)
+  }
+  const listMonths = Array.from(byMonth.keys()).sort((a, b) => a - b)
+  const calendarMonths = Array.from(touching.keys()).sort((a, b) => a - b)
+
+  const toggleKind = (kind: EventKind) =>
+    setKinds((prev) => (prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]))
+  const clearFilters = () => {
+    setQuery('')
+    setKinds([])
+    setOpenOnly(false)
   }
 
-  const monthKeys: number[] = []
-  for (let k = currentKey; k <= lastKey; k++) monthKeys.push(k)
-  const monthsWithEvents = monthKeys.filter((k) => byMonth.has(k) || touching.has(k))
-
   return (
-    <section className="bg-black py-6">
-      <div className="mx-auto max-w-7xl">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-3xl font-bold text-white sm:text-4xl"
-        >
-          Upcoming Events
-        </motion.h2>
-        <p className="mt-3 text-gray-400">
-          Events, hackathons, grants and calls for speakers I am following, with links to apply.
-        </p>
+    <div>
+      <SectionHeader
+        kicker="Watchlist"
+        title="Upcoming events"
+        intro="Conferences, hackathons, grants and calls for speakers I am following, with links to apply."
+        color={ACCENT}
+      />
 
-        {featured.length > 0 && (
-          <div className="mt-8">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-200/80">Major events</h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {featured.map((event) => (
-                <a
-                  key={event.name}
-                  href={event.links.find((l) => l.primary)?.url ?? event.links[0]?.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-lg border border-amber-300/30 bg-amber-300/5 p-3 transition-colors hover:bg-amber-300/10"
-                >
-                  <p className="font-semibold text-white">{event.name}</p>
-                  <p className="text-sm text-amber-200">{event.dateLabel}</p>
-                  <p className="text-xs text-gray-400">{event.location}</p>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="mt-8">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-green-300/80">Calendar</h3>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {monthKeys.map((k) => {
-              const { year, month } = keyToYearMonth(k)
-              const has = byMonth.has(k) || touching.has(k)
-              const hasFeatured = (touching.get(k) ?? []).some((e) => e.featured)
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  disabled={!has}
-                  onClick={() => scrollToMonth(k)}
-                  className={`rounded-md px-2 py-1 text-xs transition-colors ${
-                    !has
-                      ? 'cursor-default text-gray-600'
-                      : hasFeatured
-                        ? 'bg-amber-300/15 text-amber-200 hover:bg-amber-300/25'
-                        : 'bg-green-400/10 text-green-200 hover:bg-green-400/20'
-                  }`}
-                >
-                  {MONTHS[month]} {String(year).slice(2)}
+      {/* Search and filters */}
+      <div className="mt-6 space-y-3">
+        <label className="relative block">
+          <span className="sr-only">Search events</span>
+          <svg
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path strokeLinecap="round" d="M20 20l-3.5-3.5" />
+          </svg>
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, city or topic"
+            className="w-full rounded-lg border border-white/10 bg-white/[0.04] py-2.5 pl-9 pr-3 text-sm text-white placeholder:text-gray-500 focus:border-green-400/60 focus:outline-none focus:ring-1 focus:ring-green-400/40"
+          />
+        </label>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by type">
+          {allKinds.map((kind) => (
+            <Chip key={kind} active={kinds.includes(kind)} onClick={() => toggleKind(kind)}>
+              {kind}
+            </Chip>
+          ))}
+          <Chip active={openOnly} onClick={() => setOpenOnly((v) => !v)}>
+            Applications open
+          </Chip>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-gray-500" aria-live="polite">
+            {filtered.length} of {active.length} events
+            {hasFilters && (
+              <>
+                {' '}
+                <button type="button" onClick={clearFilters} className="text-green-300 underline-offset-2 hover:underline">
+                  Clear
                 </button>
-              )
-            })}
+              </>
+            )}
+          </p>
+          <div className="flex rounded-lg border border-white/10 p-0.5" role="group" aria-label="View">
+            {(['list', 'calendar'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+                className={`rounded-md px-3 py-1 text-xs capitalize transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
+                  view === v ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                {v}
+              </button>
+            ))}
           </div>
-          <div className="mt-3 flex flex-wrap gap-4 text-xs text-gray-400">
+        </div>
+      </div>
+
+      {filtered.length === 0 && (
+        <div className="mt-8 rounded-xl border border-white/10 p-6 text-center text-sm text-gray-400">
+          {active.length === 0 ? 'Nothing scheduled right now. Check back soon.' : 'No events match these filters.'}
+        </div>
+      )}
+
+      {view === 'list' && (
+        <>
+          {listMonths.map((k) => {
+            const { year, month } = keyToYearMonth(k)
+            return (
+              <section key={k} className="mt-8">
+                <h3 className="sticky top-0 z-10 -mx-1 bg-[rgba(10,10,10,0.92)] px-1 py-2 font-mono text-xs uppercase tracking-[0.25em] text-gray-400 backdrop-blur">
+                  {MONTHS_LONG[month]} {year}
+                </h3>
+                <div className="mt-2 space-y-3">
+                  {byMonth.get(k)!.map((event) => (
+                    <EventRow key={event.name} event={event} now={now} />
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+          {rolling.length > 0 && (
+            <section className="mt-8">
+              <h3 className="py-2 font-mono text-xs uppercase tracking-[0.25em] text-gray-400">Rolling / no fixed date</h3>
+              <div className="mt-2 space-y-3">
+                {rolling.map((event) => (
+                  <EventRow key={event.name} event={event} now={now} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {view === 'calendar' && filtered.length > 0 && (
+        <>
+          <div className="mt-6 flex flex-wrap gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-amber-300/80" /> Major event</span>
             <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded bg-green-400/30" /> Other event</span>
             <span className="flex items-center gap-1"><span className="inline-block h-3 w-3 rounded ring-1 ring-white/70" /> Today</span>
           </div>
-        </div>
-
-        {monthsWithEvents.map((k) => {
-          const { year, month } = keyToYearMonth(k)
-          const listed = byMonth.get(k) ?? []
-          const continuing = (touching.get(k) ?? []).filter((e) => !listed.includes(e))
-          return (
-            <div key={k} id={monthAnchor(k)} className="mt-10 scroll-mt-4">
-              <h3 className="text-xl font-bold text-white">
-                {MONTHS_LONG[month]} {year}
-              </h3>
-              <div className="mt-4 rounded-lg border border-white/10 p-3">
-                <MonthGrid year={year} month={month} events={touching.get(k) ?? []} today={nowDate} />
-              </div>
-              {continuing.length > 0 && (
-                <p className="mt-3 text-sm text-gray-400">
-                  Continues this month: {continuing.map((e) => e.name).join(', ')}
-                </p>
-              )}
-              {listed.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {listed.map((event) => (
-                    <EventCard key={event.name} event={event} now={now} />
-                  ))}
+          {calendarMonths.map((k) => {
+            const { year, month } = keyToYearMonth(k)
+            const events = touching.get(k) ?? []
+            return (
+              <section key={k} className="mt-6">
+                <h3 className="font-mono text-xs uppercase tracking-[0.25em] text-gray-400">
+                  {MONTHS_LONG[month]} {year}
+                </h3>
+                <div className="mt-3 rounded-xl border border-white/10 p-3">
+                  <MonthGrid year={year} month={month} events={events} today={nowDate} />
                 </div>
-              )}
-            </div>
-          )
-        })}
-
-        {rolling.length > 0 && (
-          <div className="mt-10">
-            <h3 className="text-xl font-bold text-white">Rolling / no fixed date</h3>
-            <div className="mt-4 space-y-3">
-              {rolling.map((event) => (
-                <EventCard key={event.name} event={event} now={now} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {active.length === 0 && (
-          <p className="mt-12 text-gray-400">Nothing scheduled right now. Check back soon.</p>
-        )}
-      </div>
-    </section>
+                <ul className="mt-2 space-y-1 text-xs text-gray-400">
+                  {events.map((e) => (
+                    <li key={e.name}>
+                      <span className={e.featured ? 'text-amber-200' : 'text-green-200'}>{e.dateLabel}</span>
+                      {'  '}
+                      {e.name}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          })}
+          {rolling.length > 0 && (
+            <p className="mt-6 text-xs text-gray-500">
+              Plus {rolling.length} without fixed dates (see List).
+            </p>
+          )}
+        </>
+      )}
+    </div>
   )
 }

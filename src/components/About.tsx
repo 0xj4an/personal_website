@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import SectionHeader from './SectionHeader'
 import Image from 'next/image'
 
 const roles = [
@@ -33,16 +34,9 @@ const roles = [
 export default function About() {
   return (
     <div className="text-white">
-      <motion.h2
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-8 text-3xl font-bold sm:text-4xl"
-      >
-        0xj4an
-      </motion.h2>
-      <p className="text-sm text-green-400/80 mb-6 -mt-6 font-semibold">Celo · ReFi · EVVM · Builder</p>
+      <SectionHeader kicker="00 / About" title="0xj4an" intro="Celo, ReFi, EVVM and builder." color="#a78bfa" />
 
-      <div className="flex flex-col lg:flex-row items-start">
+      <div className="mt-8 flex flex-col lg:flex-row items-start">
         <div className="flex-shrink-0 mb-8 lg:mb-0 lg:mr-8">
           <div className="overflow-hidden rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg w-40 h-40 flex items-center justify-center relative" style={{ boxShadow: '0 0 20px rgba(123, 63, 242, 0.2)' }}>
             <Image
